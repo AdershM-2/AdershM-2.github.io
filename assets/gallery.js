@@ -15,32 +15,34 @@
   const cap = document.getElementById('dk-count');
   if (cap) cap.textContent = photos.length + ' FRAMES DEVELOPED · SHOT ON PHONE · NO FILTERS HARMED';
 
-  // ---- build year-grouped masonry ----------------------------------------
+  // ---- build one horizontal "film roll" per year ---------------------------
   const years = [...new Set(photos.map(p => p.y))].sort();
   const flat = [];
   for (const y of years) {
-    const h = document.createElement('h3');
-    h.className = 'dk-year';
-    h.textContent = '— ' + y + ' —';
-    grid.appendChild(h);
-    const wrap = document.createElement('div');
-    wrap.className = 'dk-masonry';
-    grid.appendChild(wrap);
-    for (const p of photos.filter(q => q.y === y)) {
+    const group = photos.filter(q => q.y === y);
+
+    const head = document.createElement('div');
+    head.className = 'dk-roll-head';
+    head.innerHTML =
+      '<span class="dk-roll-title mono">ROLL ' + y + ' · ' + group.length +
+      ' EXPOSURE' + (group.length === 1 ? '' : 'S') + '</span>' +
+      '<span class="dk-roll-hint mono">← drag →</span>';
+    grid.appendChild(head);
+
+    const roll = document.createElement('div');
+    roll.className = 'dk-roll';
+    grid.appendChild(roll);
+
+    for (const p of group) {
       const idx = flat.length;
       flat.push(p);
-      const fig = document.createElement('figure');
-      fig.className = 'dk-item';
       const img = document.createElement('img');
       img.src = 'assets/photos/thumb/' + p.n;
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.width = p.w;
-      img.height = p.h;
       img.alt = 'photograph ' + (idx + 1) + ' of ' + photos.length;
-      fig.appendChild(img);
-      fig.addEventListener('click', () => openLB(idx));
-      wrap.appendChild(fig);
+      img.addEventListener('click', () => openLB(idx));
+      roll.appendChild(img);
     }
   }
 
