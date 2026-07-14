@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adersh Maruvattu — Roboticist</title>
+<meta name="description" content="Adersh Maruvattu — PhD researcher in robotics at IIT Kanpur (mobile manipulators, model predictive control) and co-founder & CTO of Ceres FieldCheck, building agricultural robots for small farmers.">
+<meta property="og:title" content="Adersh Maruvattu — Roboticist">
+<meta property="og:description" content="I teach machines to move — across sand arenas, assembly lines, and rice fields.">
+<meta property="og:image" content="assets/adersh.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #0c1118;
+    --panel: #0e141d;
+    --coral: #ff7d6b;
+    --amber: #ffc233;
+    --violet: #9d8cff;
+    --teal: #3fd6c4;
+    --line: rgba(63, 214, 196, 0.14);
+    --text: #eaf1f5;
+    --dim: rgba(234, 241, 245, 0.85);
+  }
+
+  body {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background: var(--ink);
+    color: var(--text);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+  a { cursor: pointer; }
+  h1, h2, h3 { font-family: 'Unbounded', sans-serif; }
+  .mono { font-family: 'Space Mono', monospace; }
+  img { max-width: 100%; display: block; }
+
+  /* ═══════════ BOOT SEQUENCE ═══════════ */
+  #boot {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #070b10;
+    display: grid;
+    place-content: center;
+    transition: opacity 0.5s ease;
+    animation: bootSafety 0.6s ease 5s forwards; /* hides itself even if JS fails */
+  }
+  @keyframes bootSafety { to { opacity: 0; visibility: hidden; } }
+  #boot.done { opacity: 0; pointer-events: none; }
+  #bootlog {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(0.7rem, 2.4vw, 0.92rem);
+    color: var(--teal);
+    line-height: 1.9;
+    white-space: pre-wrap;
+    min-width: min(430px, 84vw);
+  }
+  #bootlog::after {
+    content: '█';
+    animation: blink 0.8s steps(1) infinite;
+    color: var(--amber);
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ═══════════ CHROME: progress, HUD, reticle ═══════════ */
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0;
+    z-index: 120;
+    background: linear-gradient(90deg, var(--coral), var(--amber), var(--violet), var(--teal));
+  }
+
+  .hud {
+    position: fixed;
+    top: 14px; left: 18px;
+    z-index: 110;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: rgba(63, 214, 196, 0.75);
+    line-height: 1.75;
+    pointer-events: none;
+    text-shadow: 0 0 8px rgba(63, 214, 196, 0.3);
+  }
+  .hud b { color: var(--amber); font-weight: 400; }
+
+  #reticle {
+    position: fixed;
+    top: 0; left: 0;
+    width: 34px; height: 34px;
+    border: 1.5px solid rgba(63, 214, 196, 0.7);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 130;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  #reticle::before, #reticle::after {
+    content: '';
+    position: absolute;
+    background: rgba(63, 214, 196, 0.7);
+  }
+  #reticle::before { top: 50%; left: -7px; width: 48px; height: 1px; margin-top: -0.5px; clip-path: polygon(0 0, 18% 0, 18% 100%, 0 100%, 0 0, 100% 0, 100% 100%, 82% 100%, 82% 0); }
+  #reticle::after  { left: 50%; top: -7px; height: 48px; width: 1px; margin-left: -0.5px; clip-path: polygon(0 0, 100% 0, 100% 18%, 0 18%, 0 0, 0 100%, 100% 100%, 100% 82%, 0 82%); }
+
+  /* ═══════════ BACKGROUND LAYERS ═══════════ */
+  #space { position: fixed; inset: 0; z-index: -2; }
+  .glow {
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background:
+      radial-gradient(48% 54% at 14% 20%, rgba(255, 125, 107, 0.16), transparent 70%),
+      radial-gradient(52% 58% at 86% 26%, rgba(157, 140, 255, 0.16), transparent 70%),
+      radial-gradient(58% 60% at 55% 92%, rgba(63, 214, 196, 0.11), transparent 70%),
+      var(--ink);
+  }
+  .grid {
+    position: fixed;
+    inset: -2px;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(circle at 50% 40%, #000 55%, transparent 100%);
+  }
+
+  /* ═══════════ HERO ═══════════ */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7vw;
+    flex-wrap: wrap;
+    padding: 80px 24px 60px;
+    perspective: 1200px;
+  }
+  .hero-words { max-width: 560px; }
+  .hero-words .kicker {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 22px;
+  }
+  .hero-words h1 {
+    font-size: clamp(2.4rem, 6.5vw, 4.4rem);
+    font-weight: 800;
+    line-height: 1.08;
+    background: linear-gradient(90deg, var(--coral), var(--amber), var(--violet), var(--coral));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: flow 14s linear infinite;
+  }
+  @keyframes flow { to { background-position: 300% center; } }
+  .hero-words .tag {
+    margin-top: 22px;
+    font-size: 1.15rem;
+    line-height: 1.75;
+    color: var(--dim);
+  }
+  .hero-words .down {
+    display: inline-block;
+    margin-top: 38px;
+    font-family: 'Space Mono', monospace;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    padding-bottom: 6px;
+    background: linear-gradient(90deg, var(--coral), var(--violet)) bottom / 100% 2px no-repeat;
+    transition: background-size 0.3s, letter-spacing 0.3s;
+  }
+  .hero-words .down:hover { background-size: 100% 5px; letter-spacing: 0.22em; }
+
+  /* ── the gyroscope gimbal ── */
+  .gimbal {
+    width: 280px; height: 280px;
+    position: relative;
+    perspective: 900px;
+    flex-shrink: 0;
+  }
+  .g-stage {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    animation: gDrift 14s ease-in-out infinite alternate;
+  }
+  @keyframes gDrift {
+    from { transform: rotateX(-12deg) rotateZ(-6deg); }
+    to   { transform: rotateX(16deg)  rotateZ(8deg); }
+  }
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid;
+    transform-style: preserve-3d;
+  }
+  .ring.r1 {
+    inset: 0;
+    border-color: rgba(63, 214, 196, 0.85);
+    box-shadow: 0 0 18px rgba(63, 214, 196, 0.35), inset 0 0 18px rgba(63, 214, 196, 0.18);
+    animation: spinY 9s linear infinite;
+  }
+  .ring.r2 {
+    inset: 11%;
+    border-color: rgba(157, 140, 255, 0.85);
+    box-shadow: 0 0 18px rgba(157, 140, 255, 0.35), inset 0 0 18px rgba(157, 140, 255, 0.18);
+    animation: spinX 7s linear infinite reverse;
+  }
+  .ring.r3 {
+    inset: 22%;
+    border-color: rgba(255, 125, 107, 0.85);
+    box-shadow: 0 0 18px rgba(255, 125, 107, 0.35), inset 0 0 18px rgba(255, 125, 107, 0.18);
+    animation: spinD 11s linear infinite;
+  }
+  @keyframes spinY { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+  @keyframes spinX { from { transform: rotateX(0deg); } to { transform: rotateX(360deg); } }
+  @keyframes spinD { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
+  .core {
+    position: absolute;
+    inset: 38%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffe9b0, var(--amber) 45%, #7a4a00 100%);
+    box-shadow: 0 0 30px rgba(255, 194, 51, 0.7), 0 0 80px rgba(255, 194, 51, 0.3);
+    animation: corePulse 3s ease-in-out infinite;
+  }
+  @keyframes corePulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(255, 194, 51, 0.7), 0 0 80px rgba(255, 194, 51, 0.3); }
+    50%      { box-shadow: 0 0 44px rgba(255, 194, 51, 0.9), 0 0 110px rgba(255, 194, 51, 0.45); }
+  }
+  .g-label {
+    position: absolute;
+    bottom: -34px;
+    width: 100%;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    color: rgba(63, 214, 196, 0.55);
+  }
+  body.overdrive .ring.r1 { animation-duration: 1.8s; }
+  body.overdrive .ring.r2 { animation-duration: 1.4s; }
+  body.overdrive .ring.r3 { animation-duration: 2.2s; }
+  body.overdrive .core { filter: hue-rotate(-35deg); }
+
+  /* ═══════════ TELEMETRY TICKER ═══════════ */
+  .ticker {
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: rgba(14, 20, 29, 0.6);
+    padding: 10px 0;
+  }
+  .ticker-inner {
+    display: flex;
+    width: max-content;
+    animation: tick 36s linear infinite;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    color: rgba(63, 214, 196, 0.65);
+    white-space: nowrap;
+  }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  /* ═══════════ SECTIONS ═══════════ */
+  .section { padding: 110px 24px; }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 12px;
+  }
+  h2.title {
+    font-size: clamp(1.7rem, 4.6vw, 2.7rem);
+    font-weight: 800;
+    margin-bottom: 26px;
+    background: linear-gradient(90deg, var(--coral), var(--violet));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .lede { font-size: 1.13rem; line-height: 1.85; color: var(--dim); max-width: 680px; }
+  .lede + .lede { margin-top: 1.15em; }
+  .lede a { color: var(--teal); text-decoration: none; border-bottom: 1px solid rgba(63,214,196,0.4); }
+  .lede a:hover { color: #fff; border-color: #fff; }
+
+  /* about: 3D tilt photo card with glare */
+  .about-flex { display: flex; gap: 54px; align-items: flex-start; flex-wrap: wrap; margin-top: 30px; }
+  .about-flex .words { flex: 1 1 380px; }
+  .tilt-scene { perspective: 900px; margin-top: 8px; }
+  .photo-card {
+    flex: 0 0 300px;
+    background: var(--panel);
+    border: 1px solid rgba(63, 214, 196, 0.25);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 30px 60px rgba(0, 0, 5, 0.5);
+    transform-style: preserve-3d;
+    transition: transform 0.25s ease;
+    will-change: transform;
+    position: relative;
+    overflow: hidden;
+  }
+  .photo-card img { width: 100%; height: 360px; object-fit: cover; object-position: 50% 20%; border-radius: 8px; }
+  .photo-card .cap {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(63, 214, 196, 0.7);
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .glare { position: absolute; inset: 0; pointer-events: none; border-radius: 14px; }
+
+  /* skills chips */
+  .chips-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.26em;
+    color: rgba(63, 214, 196, 0.55);
+    margin: 44px 0 14px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; max-width: 760px; }
+  .chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+    border: 1px solid rgba(157, 140, 255, 0.35);
+    border-radius: 5px;
+    padding: 6px 12px;
+    transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
+  }
+  .chip:hover { border-color: var(--amber); color: #fff; box-shadow: 0 0 14px rgba(255, 194, 51, 0.25); }
+
+  /* ═══════════ THE ARM LAB ═══════════ */
+  .arm-wrap {
+    display: flex;
+    gap: 70px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    perspective: 1100px;
+    padding: 40px 24px 20px;
+  }
+  .arm-stage {
+    width: 320px;
+    height: 340px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(10deg) rotateY(var(--yaw, -20deg));
+  }
+  .ground {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    width: 190px; height: 190px;
+    margin-left: -95px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(63, 214, 196, 0.45);
+    background: radial-gradient(circle, rgba(63, 214, 196, 0.10), transparent 70%);
+    transform: rotateX(86deg) translateZ(-56px);
+  }
+  .pillar {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    width: 36px; height: 62px;
+    margin-left: -18px;
+    background: linear-gradient(90deg, #3a4658, #151d29);
+    border-radius: 8px 8px 3px 3px;
+    border: 1px solid rgba(63, 214, 196, 0.3);
+    transform-style: preserve-3d;
+  }
+  .pillar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: #10161f;
+    transform: translateZ(-16px);
+  }
+  .seg { transform-style: preserve-3d; }
+  .l1 {
+    position: absolute;
+    bottom: 74px;
+    left: 50%;
+    width: 24px; height: 132px;
+    margin-left: -12px;
+    transform-origin: 50% 100%;
+    transform: rotate(var(--j1, 0deg));
+    background: linear-gradient(90deg, #46548a, #222b4a);
+    border: 1px solid rgba(157, 140, 255, 0.5);
+    border-radius: 12px;
+  }
+  .l1::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: #1a2138;
+    transform: translateZ(-14px);
+  }
+  .l2 {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    width: 18px; height: 106px;
+    margin-left: -9px;
+    transform-origin: 50% 100%;
+    transform: rotate(var(--j2, -20deg));
+    background: linear-gradient(90deg, #2f5a54, #17302d);
+    border: 1px solid rgba(63, 214, 196, 0.55);
+    border-radius: 10px;
+  }
+  .l2::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: #122421;
+    transform: translateZ(-12px);
+  }
+  .joint {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    width: 22px; height: 22px;
+    margin-left: -11px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffe1a0, var(--amber) 60%, #8a5a00);
+    box-shadow: 0 0 14px rgba(255, 194, 51, 0.65);
+    transform: translateZ(3px);
+  }
+  .grip {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    width: 36px; height: 18px;
+    margin-left: -18px;
+    border-top: 3px solid var(--coral);
+    border-radius: 3px;
+    box-shadow: 0 -2px 12px rgba(255, 125, 107, 0.4);
+  }
+  .grip::before, .grip::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 6px; height: 16px;
+    background: var(--coral);
+    box-shadow: 0 0 10px rgba(255, 125, 107, 0.6);
+    border-radius: 0 0 2px 2px;
+  }
+  .grip::before { left: 2px; }
+  .grip::after  { right: 2px; }
+
+  .arm-caption { max-width: 360px; }
+  .arm-caption h3 { font-size: 1.3rem; color: var(--amber); margin-bottom: 12px; }
+  .arm-caption p { line-height: 1.8; color: var(--dim); }
+  .arm-caption p + p { margin-top: 0.9em; }
+  #armMode {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    color: var(--teal);
+    border: 1px solid rgba(63, 214, 196, 0.35);
+    border-radius: 4px;
+    padding: 7px 12px;
+  }
+  #armMode.manual { color: var(--coral); border-color: rgba(255, 125, 107, 0.5); }
+
+  /* ═══════════ FILMSTRIP ═══════════ */
+  .filmstrip { overflow: hidden; padding: 30px 0 14px; }
+  .strip { display: flex; width: max-content; animation: tick 55s linear infinite; }
+  .filmstrip:hover .strip { animation-play-state: paused; }
+  .strip img {
+    height: 200px; width: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-right: 26px;
+    border: 1px solid rgba(63, 214, 196, 0.3);
+    box-shadow: 0 12px 30px rgba(0, 0, 5, 0.4);
+    transition: transform 0.3s ease, border-color 0.3s;
+    background: #fff;
+  }
+  .strip img:hover { transform: scale(1.05); border-color: var(--amber); }
+  .strip-hint {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    color: rgba(63, 214, 196, 0.5);
+    padding: 12px 24px 0;
+  }
+
+  /* ═══════════ PROJECT FLIP TILES ═══════════ */
+  .projects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+  }
+  .flipcard { perspective: 1000px; height: 340px; }
+  .flipinner {
+    position: relative;
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+  }
+  .flipcard:hover .flipinner, .flipinner.flip { transform: rotateY(180deg); }
+  .flipface {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(63, 214, 196, 0.25);
+  }
+  .flipfront { background: #fff; }
+  .flipfront img { width: 100%; height: 100%; object-fit: cover; }
+  .flipfront .label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px;
+    background: linear-gradient(transparent, rgba(8, 12, 20, 0.92));
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+  }
+  /* image-free fronts for the theory missions */
+  .cssfront {
+    background:
+      repeating-linear-gradient(0deg, rgba(63,214,196,0.07) 0 1px, transparent 1px 23px),
+      repeating-linear-gradient(90deg, rgba(63,214,196,0.07) 0 1px, transparent 1px 23px),
+      var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cssfront .big {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: 1.9rem;
+    letter-spacing: 0.02em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(157, 140, 255, 0.8);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .flipback {
+    transform: rotateY(180deg);
+    background: var(--panel);
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .flipback h3 { color: var(--amber); font-size: 1.12rem; margin-bottom: 12px; }
+  .flipback p { line-height: 1.65; color: var(--dim); font-size: 0.93rem; }
+  .flipback .stamp {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(63, 214, 196, 0.7);
+    margin-top: 14px;
+  }
+  .flipback .stamp a { color: var(--teal); text-decoration: none; }
+  .flipback .stamp a:hover { color: #fff; }
+
+  /* ═══════════ PUBLICATIONS ═══════════ */
+  .pubs { margin-top: 40px; }
+  .pub {
+    border-left: 3px solid;
+    border-image: linear-gradient(180deg, var(--coral), var(--violet)) 1;
+    padding: 4px 0 4px 26px;
+    max-width: 780px;
+  }
+  .pub + .pub { margin-top: 38px; }
+  .pub .when {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .pub h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.18rem;
+    line-height: 1.5;
+    margin: 8px 0 6px;
+    color: var(--text);
+  }
+  .pub .venue { color: rgba(234, 241, 245, 0.65); font-size: 0.98rem; line-height: 1.6; }
+  .pub-more {
+    margin-top: 44px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .pub-more a {
+    color: var(--teal);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(63,214,196,0.4);
+    padding-bottom: 2px;
+  }
+  .pub-more a:hover { color: #fff; border-color: #fff; }
+
+  /* ═══════════ TRAJECTORY ═══════════ */
+  .traj { margin-top: 44px; position: relative; max-width: 760px; }
+  .traj::before {
+    content: '';
+    position: absolute;
+    left: 7px; top: 6px; bottom: 6px;
+    border-left: 2px dashed rgba(63, 214, 196, 0.35);
+  }
+  .wp { position: relative; padding: 0 0 42px 42px; }
+  .wp:last-child { padding-bottom: 0; }
+  .wp::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffe1a0, var(--amber));
+    box-shadow: 0 0 12px rgba(255, 194, 51, 0.6);
+  }
+  .wp .when {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.22em;
+    color: var(--teal);
+    text-transform: uppercase;
+  }
+  .wp h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.15rem; margin: 6px 0 6px; }
+  .wp p { color: var(--dim); line-height: 1.7; max-width: 620px; }
+
+  /* ═══════════ QUOTE ═══════════ */
+  .quote { padding: 120px 24px 100px; text-align: center; perspective: 800px; }
+  .quote blockquote {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1.3rem, 4vw, 2.1rem);
+    line-height: 1.5;
+    max-width: 800px;
+    margin: 0 auto;
+    background: linear-gradient(90deg, var(--amber), var(--coral), var(--violet));
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: flow 13s linear infinite;
+  }
+  .quote .who {
+    margin-top: 22px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: rgba(63, 214, 196, 0.6);
+  }
+
+  /* ═══════════ CONTACT TERMINAL ═══════════ */
+  .terminal {
+    max-width: 660px;
+    margin: 40px auto 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(63, 214, 196, 0.3);
+    box-shadow: 0 30px 70px rgba(0, 0, 5, 0.55);
+    text-align: left;
+  }
+  .term-head {
+    background: #16202c;
+    padding: 10px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(234, 241, 245, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .term-head i {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .term-head i.d1 { background: var(--coral); }
+  .term-head i.d2 { background: var(--amber); }
+  .term-head i.d3 { background: var(--teal); }
+  .term-body {
+    background: #0a0f16;
+    padding: 26px 24px 30px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.92rem;
+    line-height: 2.1;
+  }
+  .term-body .prompt { color: var(--teal); }
+  .term-body .tcursor {
+    display: inline-block;
+    width: 0.55em; height: 1.05em;
+    background: var(--amber);
+    vertical-align: text-bottom;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  .term-out { opacity: 0; transition: opacity 0.6s ease; }
+  .term-out.show { opacity: 1; }
+  .term-out .addr { color: rgba(234, 241, 245, 0.55); font-size: 0.8rem; }
+  .chan {
+    display: inline-block;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid rgba(157, 140, 255, 0.45);
+    border-radius: 5px;
+    padding: 6px 16px;
+    margin: 8px 10px 0 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.15s ease;
+    will-change: transform;
+  }
+  .chan:hover {
+    border-color: var(--amber);
+    box-shadow: 0 0 16px rgba(255, 194, 51, 0.3);
+  }
+
+  /* ═══════════ REVEALS ═══════════ */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal3d { opacity: 0; transform: rotateX(24deg) translateY(50px); transition: opacity 0.9s ease, transform 0.9s ease; }
+  .reveal3d.in { opacity: 1; transform: none; }
+
+  footer {
+    text-align: center;
+    padding: 26px 24px 60px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: rgba(234, 241, 245, 0.45);
+    line-height: 2;
+  }
+
+  @media (max-width: 700px) {
+    .hud { display: none; }
+    .gimbal { width: 210px; height: 210px; }
+    .arm-caption { text-align: center; }
+  }
+  /* ═══════════ MMS LIVE SIM ═══════════ */
+  .mms-wrap { max-width: 980px; margin: 30px auto 0; }
+  .mms-frame {
+    position: relative;
+    border: 1px solid rgba(63, 214, 196, 0.28);
+    border-radius: 16px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 100% at 50% 0%, rgba(63, 214, 196, 0.06), transparent 60%),
+      rgba(10, 15, 22, 0.55);
+    box-shadow: 0 30px 70px rgba(0, 0, 5, 0.5);
+  }
+  #mms-stage {
+    width: 100%;
+    height: clamp(360px, 60vh, 560px);
+    position: relative;
+    touch-action: none;      /* let OrbitControls own touch gestures */
+  }
+  #mms-stage canvas { display: block; }
+  .mms-overlay {
+    position: absolute; top: 14px; left: 16px;
+    pointer-events: none;
+    font-size: 0.72rem;
+    color: rgba(63, 214, 196, 0.85);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+    line-height: 1.7;
+  }
+  .mms-hud-title { color: var(--amber); letter-spacing: 0.18em; margin-bottom: 6px; }
+  #mms-tele .warn { color: var(--coral); }
+  #mms-tele .ok { color: var(--teal); }
+  .mms-controls {
+    position: absolute; bottom: 14px; left: 16px; right: 16px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  #mms-slip {
+    pointer-events: auto;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    color: var(--teal);
+    background: rgba(10, 15, 22, 0.7);
+    border: 1px solid rgba(63, 214, 196, 0.4);
+    border-radius: 6px;
+    padding: 8px 14px;
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  #mms-slip:hover { box-shadow: 0 0 16px rgba(63, 214, 196, 0.3); }
+  #mms-slip.on { color: var(--coral); border-color: rgba(255, 125, 107, 0.6); box-shadow: 0 0 18px rgba(255, 125, 107, 0.35); }
+  .mms-hint { font-size: 0.68rem; letter-spacing: 0.14em; color: rgba(234, 241, 245, 0.4); }
+  .mms-legend {
+    display: flex; gap: 22px; flex-wrap: wrap; justify-content: center;
+    margin-top: 18px;
+    font-size: 0.72rem;
+    color: rgba(234, 241, 245, 0.6);
+  }
+  .mms-legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .mms-legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+  .mms-fallback {
+    display: none;
+    position: absolute; inset: 0;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px;
+    font-family: 'Space Mono', monospace;
+    color: rgba(234, 241, 245, 0.7);
+    line-height: 1.9;
+  }
+  #mms-stage.nogl canvas { display: none; }
+  #mms-stage.nogl .mms-fallback { display: flex; }
+  .mms-caption { max-width: 760px; margin: 26px auto 0; }
+  .mms-caption p { color: var(--dim); line-height: 1.8; font-size: 1.05rem; }
+  .mms-caption p + p { margin-top: 0.9em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<noscript><style>#boot{display:none}</style></noscript>
+<div id="boot"><pre id="bootlog"></pre></div>
+
+<div id="progress"></div>
+<div class="glow"></div>
+<canvas id="space"></canvas>
+<div class="grid"></div>
+<div id="reticle"></div>
+
+<div class="hud">
+  SYS::ADERSH_M<br>
+  CURSOR <b id="hud-cur">[----,----]</b><br>
+  LOOP <b id="hud-fps">-- HZ</b><br>
+  DEPTH <b id="hud-scr">0%</b><br>
+  WAYPOINT <b id="hud-wp">HOME</b>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero" data-wp="HOME">
+  <div class="hero-words">
+    <p class="kicker">roboticist · mpc &amp; control · agri-robotics founder</p>
+    <h1>Adersh Maruvattu</h1>
+    <p class="tag">I teach machines to move — across sand arenas, assembly lines, and rice fields. PhD researcher at IIT Kanpur; co-founder &amp; CTO of Ceres FieldCheck.</p>
+    <a class="down" href="#about">initiate scroll ↓</a>
+  </div>
+
+  <div class="gimbal" id="gimbal" title="click me">
+    <div class="g-stage">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="core"></div>
+    </div>
+    <p class="g-label">ATTITUDE REF · TAP CORE</p>
+  </div>
+</section>
+
+<!-- ═══ TELEMETRY TICKER ═══ -->
+<div class="ticker"><div class="ticker-inner" id="ticker">
+  <span>TELEMETRY STREAM&nbsp;&nbsp;▸&nbsp;&nbsp;13-DOF CHAIN NOMINAL&nbsp;&nbsp;▸&nbsp;&nbsp;WHEEL SLIP COMPENSATED&nbsp;&nbsp;▸&nbsp;&nbsp;LUKE FIELD UNIT ONLINE&nbsp;&nbsp;▸&nbsp;&nbsp;MPC HORIZON CONVERGED&nbsp;&nbsp;▸&nbsp;&nbsp;KANPUR ⇄ FRANKFURT LINK ACTIVE&nbsp;&nbsp;▸&nbsp;&nbsp;COFFEE RESERVES CRITICAL&nbsp;&nbsp;▸&nbsp;&nbsp;SECOND BREAKFAST SCHEDULED&nbsp;&nbsp;▸&nbsp;&nbsp;NO WEEDS WERE SPARED&nbsp;&nbsp;▸&nbsp;&nbsp;</span>
+</div></div>
+
+<!-- ═══ PROFILE ═══ -->
+<section class="section" id="about" data-wp="PROFILE">
+  <div class="wrap reveal">
+    <p class="eyebrow">// 01 — profile</p>
+    <h2 class="title">Engineer of things that move</h2>
+    <div class="about-flex">
+      <div class="words">
+        <p class="lede">I'm a PhD candidate in Mechanical Engineering at IIT Kanpur, working with Prof. Ashish Dutta on a stubborn, wonderful problem: making a 13-degree-of-freedom mobile manipulator — a six-wheeled rover carrying a robotic arm — trace precise paths with its end effector while its wheels sink and slip in sand. My answer so far is model predictive control that learns the slip as it happens and quietly shifts the work from the struggling base to the arm.</p>
+        <p class="lede">Before the PhD I spent two and a half years at Maruti Suzuki, making assembly lines flow faster in Gurugram — and, during the 2018 Kerala floods, running the worst-hit workshop in the state without missing a single delivery commitment. That year taught me more about engineering under constraints than any course ever has.</p>
+        <p class="lede">These days I split my life between the lab and a startup. As co-founder and CTO of <a href="https://www.ceresfieldcheck.com/" target="_blank" rel="noopener">Ceres FieldCheck</a>, I build LUKE — an autonomous field robot that pulls weeds mechanically and catches crop disease early, so small farmers can stop spending half their income on chemicals. We won the Indo-German DWIH Innovators Connect in 2023, and the mission hasn't changed since: technology should serve those who feed us.</p>
+        <p class="lede">Off duty I'm a Lord of the Rings fan who captained — and drove for — Team Unwired, our BAJA SAE India off-road racing team. A taste for vehicles that have to survive rough terrain, it turns out, never really leaves you.</p>
+      </div>
+      <div class="tilt-scene">
+        <figure class="photo-card" data-tilt>
+          <img src="assets/adersh.jpg" alt="Adersh Maruvattu" loading="lazy">
+          <div class="cap"><span>./adersh.jpg</span><span>human, verified</span></div>
+          <div class="glare"></div>
+        </figure>
+      </div>
+    </div>
+
+    <p class="chips-label">SUBSYSTEMS LOADED</p>
+    <div class="chips">
+      <span class="chip">MATLAB</span>
+      <span class="chip">Python</span>
+      <span class="chip">C++ · Teensy · ESP32</span>
+      <span class="chip">ROS2</span>
+      <span class="chip">MPC · CasADi · IPOPT</span>
+      <span class="chip">Reinforcement Learning</span>
+      <span class="chip">PyTorch · YOLO</span>
+      <span class="chip">EKF · MHE Estimation</span>
+      <span class="chip">SolidWorks</span>
+      <span class="chip">PCB Design · EasyEDA</span>
+      <span class="chip">CoppeliaSim · MuJoCo</span>
+      <span class="chip">3D Printing</span>
+      <span class="chip">LaTeX</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MMS LIVE SIM ═══ -->
+<section class="section" id="lab" data-wp="LAB" style="padding-top:40px">
+  <div class="wrap reveal">
+    <p class="eyebrow">// 02 — the lab</p>
+    <h2 class="title">The MMS, live in your browser</h2>
+    <p class="lede">Not a video and not a stock model — a real-time WebGL rebuild of my actual research platform, its dimensions and joint limits transcribed straight from the robot's URDF. Six wheels, four steering corners, rocker-bogie suspension, and a three-axis arm holding its end-effector on a reference path while the whole base drives. Drag to orbit, scroll to zoom.</p>
+  </div>
+
+  <div class="mms-wrap reveal">
+    <div class="mms-frame">
+      <div id="mms-stage">
+        <div class="mms-fallback">
+          Your browser has WebGL turned off, so the live robot can't render here —<br>
+          the rest of the site works fine. Enable WebGL to drive the MMS.
+        </div>
+      </div>
+      <div class="mms-overlay">
+        <div class="mms-hud-title mono">MMS · 13-DOF · LIVE SIM</div>
+        <div id="mms-tele" class="mono"></div>
+      </div>
+      <div class="mms-controls">
+        <button type="button" id="mms-slip" class="mono">TERRAIN SLIP: OFF</button>
+        <span class="mms-hint mono">drag to orbit · scroll to zoom · press S for slip</span>
+      </div>
+    </div>
+
+    <div class="mms-legend mono">
+      <span><i style="background:#9d8cff"></i> reference path</span>
+      <span><i style="background:#ffc233"></i> tracked target</span>
+      <span><i style="background:#3fd6c4"></i> end-effector trail</span>
+    </div>
+
+    <div class="mms-caption">
+      <p>The real one carries its arm on a six-wheeled Ackermann rover with rocker-bogie suspension, run by Teensy and ESP32 boards and localised with a Kinect and AprilTag markers on a five-by-seven-metre sand arena. This browser version weighs about half a megabyte.</p>
+      <p>Hit <b>terrain slip</b> and the base begins to drift while the wheels over-spin — exactly the disturbance my slip-adaptive controller is built to absorb. Watch the tracking error climb as the arm fights to keep its end-effector on the violet path.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FILMSTRIP ═══ -->
+<div class="filmstrip reveal">
+  <div class="strip" id="strip">
+    <img src="assets/field1.jpg" alt="rice fields in Andhra Pradesh" loading="lazy">
+    <img src="assets/mms_hardware.jpg" alt="the mobile manipulator on the sand arena at IIT Kanpur" loading="lazy">
+    <img src="assets/Luke_render2.jpeg" alt="CAD render of the LUKE agricultural robot" loading="lazy">
+    <img src="assets/field2.jpg" alt="farm fields" loading="lazy">
+    <img src="assets/Luke_render3.jpeg" alt="top view render of the LUKE agricultural robot" loading="lazy">
+    <img src="assets/mms_annotated.jpg" alt="annotated kinematic diagram of the 13-DOF mobile manipulator" loading="lazy">
+  </div>
+  <p class="strip-hint">VISUAL LOG — FIELDS, MACHINES, AND THE PEOPLE RESPONSIBLE</p>
+</div>
+
+<!-- ═══ MISSIONS ═══ -->
+<section class="section" id="work" data-wp="MISSIONS">
+  <div class="wrap">
+    <p class="eyebrow reveal">// 03 — mission archive</p>
+    <h2 class="title reveal">Things I built &amp; made move</h2>
+    <p class="lede reveal">Hover a tile — or tap it — and it flips in 3D to the story on the back.</p>
+
+    <div class="projects">
+      <div class="flipcard reveal">
+        <div class="flipinner">
+          <div class="flipface flipfront">
+            <img src="assets/Luke_real.jpeg" alt="the LUKE prototype robot" loading="lazy">
+            <div class="label">MISSION_01 ▸ LUKE</div>
+          </div>
+          <div class="flipface flipback">
+            <h3>LUKE — Ceres FieldCheck</h3>
+            <p>An autonomous field robot for small farmers: chemical-free mechanical weeding and early disease detection, one robot shared by a whole cooperative. Winner of the Indo-German DWIH Innovators Connect 2023, with grant backing from Goethe University and RWTH Aachen.</p>
+            <div class="stamp">↳ <a href="https://www.ceresfieldcheck.com/" target="_blank" rel="noopener">ceresfieldcheck.com</a></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flipcard reveal">
+        <div class="flipinner">
+          <div class="flipface flipfront">
+            <img src="assets/mms_hardware.jpg" alt="rover on sand arena" loading="lazy">
+            <div class="label">MISSION_02 ▸ SLIP-ADAPTIVE MPC</div>
+          </div>
+          <div class="flipface flipback">
+            <h3>Slip-Adaptive MPC on Sand</h3>
+            <p>How do you track a precise path when the ground itself gives way? A lightweight neural network estimates wheel slip online and reshapes the controller's cost, shifting effort from the sinking base to the arm — an 18.5% tracking-error reduction on real hardware.</p>
+            <div class="stamp">↳ under review, ASME JMR · hardware-validated</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flipcard reveal">
+        <div class="flipinner">
+          <div class="flipface flipfront">
+            <img src="assets/mms_annotated.jpg" alt="annotated 13-DOF mobile manipulator" loading="lazy">
+            <div class="label">MISSION_03 ▸ 13-DOF MMS</div>
+          </div>
+          <div class="flipface flipback">
+            <h3>ANN-Based MPC for a 13-DOF System</h3>
+            <p>The full machine: six driven wheels, four steering axes and a three-axis arm, coordinated by a neural-network-based model predictive controller so the end effector holds its path over rough terrain. Presented at IEEE RoMoCo 2024 in Zakopane, Poland.</p>
+            <div class="stamp">↳ IEEE RoMoCo 2024, pp. 223–228</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flipcard reveal">
+        <div class="flipinner">
+          <div class="flipface flipfront cssfront">
+            <span class="big">NSP<br>MPC</span>
+            <div class="label">MISSION_04 ▸ TASK PRIORITY</div>
+          </div>
+          <div class="flipface flipback">
+            <h3>Task Priority, Guaranteed</h3>
+            <p>A family of controllers that embed null-space task hierarchies directly into the MPC decision variables — so a redundant robot can keep its camera level without ever compromising the gripper's path. Benchmarked against eight controllers across hundreds of simulation runs.</p>
+            <div class="stamp">↳ manuscripts in preparation · T-RO / ICRA targets</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flipcard reveal">
+        <div class="flipinner">
+          <div class="flipface flipfront cssfront">
+            <span class="big">FAULT<br>MODE</span>
+            <div class="label">MISSION_05 ▸ RESILIENCE</div>
+          </div>
+          <div class="flipface flipback">
+            <h3>Driving Through Failure</h3>
+            <p>What happens when an actuator dies mid-mission? Physics-informed neural networks and meta-reinforcement learning that keep a mobile manipulator on its path when motors fail — plus robust MPC under actuator failure, presented at AIR 2025, IIT Jodhpur.</p>
+            <div class="stamp">↳ AIR 2025 · PINN & meta-RL studies ongoing</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flipcard reveal">
+        <div class="flipinner">
+          <div class="flipface flipfront cssfront">
+            <span class="big">UWB<br>RTLS</span>
+            <div class="label">MISSION_06 ▸ INDOOR GPS</div>
+          </div>
+          <div class="flipface flipback">
+            <h3>Centimetre GPS, Indoors, for $378</h3>
+            <p>An indoor positioning system built from first principles: Decawave UWB radios on ESP32 boards, two-way ranging, an IMU, and an extended Kalman filter — roughly three centimetres of accuracy for the price of a phone, ground-truthed with a Kinect and ArUco markers.</p>
+            <div class="stamp">↳ manuscript in progress</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PUBLICATIONS ═══ -->
+<section class="section" id="pubs" data-wp="TRANSMISSIONS">
+  <div class="wrap">
+    <p class="eyebrow reveal">// 04 — transmission log</p>
+    <h2 class="title reveal">Publications</h2>
+
+    <div class="pubs">
+      <article class="pub reveal">
+        <span class="when">2026 · ASME Journal of Mechanisms and Robotics</span>
+        <h3>Energy Aware Trajectory Optimization Using DRL in Humanoid Robot Through Via-Point Learning</h3>
+        <p class="venue">J. Sorokhaibam, A. Maruvattu, A. Dutta</p>
+      </article>
+
+      <article class="pub reveal">
+        <span class="when">Under review · ASME Journal of Mechanisms and Robotics</span>
+        <h3>Slip-Adaptive MPC for End-Effector Tracking of a Mobile Manipulator on Deformable Terrain</h3>
+        <p class="venue">A. Maruvattu, A. Dutta</p>
+      </article>
+
+      <article class="pub reveal">
+        <span class="when">2025 · 7th International Conference on Advances in Robotics (AIR), IIT Jodhpur</span>
+        <h3>Robust Path Tracking for Wheeled Mobile Robots Using Model Predictive Control under Actuator Failure</h3>
+        <p class="venue">A. Maruvattu, A. Dutta</p>
+      </article>
+
+      <article class="pub reveal">
+        <span class="when">2024 · 13th IEEE International Workshop on Robot Motion and Control (RoMoCo), Poland</span>
+        <h3>End Effector Path Tracking by a 13-DOF Mobile Manipulator System Using ANN-Based Model Predictive Control</h3>
+        <p class="venue">A. Maruvattu, A. Dutta — pp. 223–228</p>
+      </article>
+    </div>
+
+    <p class="pub-more reveal">↳ the full log lives on <a href="https://scholar.google.com/citations?user=dqug1CkAAAAJ" target="_blank" rel="noopener">Google Scholar</a></p>
+  </div>
+</section>
+
+<!-- ═══ TRAJECTORY ═══ -->
+<section class="section" id="path" data-wp="TRAJECTORY" style="padding-top:40px">
+  <div class="wrap">
+    <p class="eyebrow reveal">// 05 — state history</p>
+    <h2 class="title reveal">Trajectory — globally planned, locally noisy</h2>
+
+    <div class="traj">
+      <div class="wp reveal">
+        <span class="when">2013 → 2017 · NIT Calicut</span>
+        <h3>B.Tech, Mechanical Engineering</h3>
+        <p>Graduated First Class, and both captained and drove for Team Unwired, our BAJA SAE India team, at the country's biggest student off-roading event — my first lesson in building machines that have to survive real terrain, from behind the wheel.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">2017 → 2019 · Maruti Suzuki</span>
+        <h3>Assembly lines &amp; one very wet year</h3>
+        <p>Assistant Manager on pick-to-light assembly-line efficiency in Gurugram — and the best-performing Graduate Engineer Trainee of my 2017 cohort. When the 2018 Kerala floods hit, I ran the worst-affected workshop in the state and still met every delivery commitment.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">2020 → now · IIT Kanpur</span>
+        <h3>PhD, Robotics</h3>
+        <p>Mobile manipulators on deformable terrain, with Prof. Ashish Dutta — MPC, neural networks, and a rover that keeps finding new ways to slip. Also mathematics coordinator for an NGO running ~300 classes a month for nearby public schools.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">SDU · Odense, Denmark</span>
+        <h3>Elite Summer School</h3>
+        <p>Selected for the University of Southern Denmark's elite robotics &amp; entrepreneurship programme — around 25 seats worldwide. Built a screw-hole detection system, and a lot of conviction about building things.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">2023 · Bengaluru ⇄ Stuttgart</span>
+        <h3>Ceres FieldCheck wins DWIH Innovators Connect</h3>
+        <p>Our agri-robotics startup won the Indo-German tandem programme's second cohort. Now a registered company in Germany with grants from Goethe University and RWTH Aachen, and pilots with the Andhra Pradesh Department of Agriculture.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">2024 · Zakopane, Poland</span>
+        <h3>First IEEE paper at RoMoCo</h3>
+        <p>Presented the 13-DOF ANN-MPC work in the Tatra mountains. The robot stayed home; the results travelled well.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">2025 · IIT Jodhpur</span>
+        <h3>AIR 2025</h3>
+        <p>Second conference paper — model predictive control that keeps tracking when actuators fail.</p>
+      </div>
+      <div class="wp reveal">
+        <span class="when">2026 · now</span>
+        <h3>Present state</h3>
+        <p>Slip-adaptive MPC under journal review, LUKE's second generation taking shape on the drawing board, and a thesis slowly converging.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ QUOTE ═══ -->
+<section class="quote">
+  <blockquote class="reveal3d">"Technology should serve those who feed us."</blockquote>
+  <p class="who reveal">— THE CERES FIELDCHECK CREDO</p>
+</section>
+
+<!-- ═══ COMMS ═══ -->
+<section class="section" id="contact" data-wp="COMMS" style="text-align:center; padding-bottom:130px; padding-top:20px">
+  <div class="wrap reveal">
+    <p class="eyebrow">// 06 — open a channel</p>
+    <h2 class="title" style="margin-bottom:6px">Comms</h2>
+    <div class="terminal">
+      <div class="term-head"><i class="d1"></i><i class="d2"></i><i class="d3"></i>&nbsp;guest@adersh — ssh</div>
+      <div class="term-body">
+        <div><span class="prompt">guest@adersh:~$</span> <span id="termcmd"></span><span class="tcursor"></span></div>
+        <div class="term-out" id="termout">
+          channels open:<br>
+          <a class="chan" href="mailto:adm20@iitk.ac.in">EMAIL</a>
+          <a class="chan" href="https://github.com/AdershM-2" target="_blank" rel="noopener">GITHUB</a>
+          <a class="chan" href="https://scholar.google.com/citations?user=dqug1CkAAAAJ" target="_blank" rel="noopener">SCHOLAR</a>
+          <a class="chan" href="https://www.linkedin.com/in/adersh-m-31261a105" target="_blank" rel="noopener">LINKEDIN</a>
+          <a class="chan" href="https://www.ceresfieldcheck.com/" target="_blank" rel="noopener">FIELDCHECK</a>
+          <a class="chan" href="CV.pdf" target="_blank" rel="noopener">CV.PDF</a>
+          <br>
+          <span class="addr">physical layer: C1, Old SBRA, IIT Kanpur</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  hand-coded · WebGL + CSS 3D + canvas · the robot is rebuilt from its own URDF · one does not simply drag-and-drop a website<br>
+  easter eggs: orbit the MMS &amp; toggle terrain slip (press S) · tap the gimbal core
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── boot sequence ── */
+  const boot = document.getElementById('boot');
+  const bootlog = document.getElementById('bootlog');
+  const LINES = [
+    '> ADERSH_M PORTFOLIO OS — build 2026.07',
+    '> mounting /dev/robotics ............ OK',
+    '> loading kinematic chains (13 DOF) . OK',
+    '> arming weed removal module ........ OK',
+    '> pose estimate converged',
+    '> second breakfast scheduled',
+    '> READY'
+  ];
+  function hideBoot() { boot.classList.add('done'); }
+  if (RM) { hideBoot(); }
+  else {
+    let li = 0;
+    (function next() {
+      if (li < LINES.length) { bootlog.textContent += LINES[li++] + '\n'; setTimeout(next, 150); }
+      else setTimeout(hideBoot, 400);
+    })();
+    boot.addEventListener('click', hideBoot);
+  }
+
+  /* ── 3D point-cloud background (canvas, real perspective projection) ── */
+  const cv = document.getElementById('space');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resize() {
+    W = innerWidth; H = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  let seed = 99;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const COLS = ['63,214,196', '157,140,255', '255,125,107', '255,194,51'];
+  const pts = [];
+  for (let i = 0; i < 230; i++) {
+    const th = rand() * Math.PI * 2, ph = Math.acos(2 * rand() - 1), r = 420 + rand() * 480;
+    pts.push({
+      x: r * Math.sin(ph) * Math.cos(th),
+      y: r * Math.cos(ph) * 0.62,
+      z: r * Math.sin(ph) * Math.sin(th),
+      c: COLS[(rand() * 4) | 0],
+      s: 1 + rand() * 1.6
+    });
+  }
+  let rot = 0, tilt = 0, targetTilt = 0, frames = 0;
+
+  function draw() {
+    frames++;
+    ctx.clearRect(0, 0, W, H);
+    rot += 0.0009;
+    tilt += (targetTilt - tilt) * 0.03;
+    const f = 700, cx = W / 2, cy = H * 0.42;
+    const cR = Math.cos(rot), sR = Math.sin(rot), cT = Math.cos(tilt), sT = Math.sin(tilt);
+    for (const p of pts) {
+      const x = p.x * cR + p.z * sR, z = -p.x * sR + p.z * cR;
+      const y = p.y * cT - z * sT, z2 = p.y * sT + z * cT;
+      const s = f / (f + z2 + 950);
+      const a = Math.max(0.05, Math.min(0.8, s * 0.85));
+      ctx.fillStyle = 'rgba(' + p.c + ',' + a.toFixed(3) + ')';
+      const sz = p.s * s * 1.9;
+      ctx.fillRect(cx + x * s * 1.6, cy + y * s * 1.6, sz, sz);
+    }
+    if (!RM) requestAnimationFrame(draw);
+  }
+  if (RM) draw(); else requestAnimationFrame(draw);
+
+  /* ── HUD ── */
+  const hudCur = document.getElementById('hud-cur');
+  const hudFps = document.getElementById('hud-fps');
+  const hudScr = document.getElementById('hud-scr');
+  const hudWp  = document.getElementById('hud-wp');
+  const progress = document.getElementById('progress');
+
+  addEventListener('mousemove', e => {
+    targetTilt = (e.clientY / H - 0.5) * 0.35;
+    hudCur.textContent = '[' + String(e.clientX).padStart(4, '0') + ',' + String(e.clientY).padStart(4, '0') + ']';
+  }, { passive: true });
+
+  setInterval(() => { hudFps.textContent = (frames * 2) + ' HZ'; frames = 0; }, 500);
+
+  addEventListener('scroll', () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    const pct = max > 0 ? Math.round(scrollY / max * 100) : 0;
+    hudScr.textContent = pct + '%';
+    progress.style.width = pct + '%';
+  }, { passive: true });
+
+  const wpIO = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) hudWp.textContent = e.target.dataset.wp;
+  }), { rootMargin: '-40% 0px -50% 0px' });
+  document.querySelectorAll('[data-wp]').forEach(s => wpIO.observe(s));
+
+  /* ── reticle cursor companion ── */
+  if (matchMedia('(pointer:fine)').matches && !RM) {
+    const ret = document.getElementById('reticle');
+    let rx = W / 2, ry = H / 2, mx = rx, my = ry;
+    addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
+    (function rloop() {
+      rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;
+      ret.style.transform = 'translate(' + (rx - 17) + 'px,' + (ry - 17) + 'px)';
+      requestAnimationFrame(rloop);
+    })();
+    ret.style.opacity = 1;
+  }
+
+  /* ── mouse-driven 3D tilt with glare ── */
+  document.querySelectorAll('[data-tilt]').forEach(el => {
+    const glare = el.querySelector('.glare');
+    const MAX = 13;
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transform = 'rotateY(' + (px * MAX) + 'deg) rotateX(' + (-py * MAX) + 'deg) translateZ(12px)';
+      if (glare) glare.style.background =
+        'radial-gradient(circle at ' + ((px + 0.5) * 100) + '% ' + ((py + 0.5) * 100) + '%, rgba(255,255,255,0.20), transparent 55%)';
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = '';
+      if (glare) glare.style.background = 'transparent';
+    });
+  });
+
+  /* ── the drivable MMS lives in assets/mms-sim.js (WebGL) ── */
+
+  /* ── gimbal overdrive easter egg ── */
+  document.getElementById('gimbal').addEventListener('click', () => {
+    document.body.classList.toggle('overdrive');
+  });
+
+  /* ── ticker + filmstrip seamless loops ── */
+  const ticker = document.getElementById('ticker');
+  ticker.innerHTML += ticker.innerHTML;
+  const strip = document.getElementById('strip');
+  strip.innerHTML += strip.innerHTML;
+
+  /* ── project tiles: tap to flip (mobile) ── */
+  document.querySelectorAll('.flipcard').forEach(card => {
+    card.addEventListener('click', () => {
+      card.querySelector('.flipinner').classList.toggle('flip');
+    });
+  });
+
+  /* ── contact terminal typing ── */
+  const termcmd = document.getElementById('termcmd');
+  const termout = document.getElementById('termout');
+  let termDone = false;
+  function runTerm() {
+    if (termDone) return;
+    termDone = true;
+    const CMD = 'connect --with adersh --channel any';
+    if (RM) { termcmd.textContent = CMD; termout.classList.add('show'); return; }
+    let i = 0;
+    (function type() {
+      if (i <= CMD.length) { termcmd.textContent = CMD.slice(0, i++); setTimeout(type, 42); }
+      else setTimeout(() => termout.classList.add('show'), 250);
+    })();
+  }
+  const termIO = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { runTerm(); termIO.disconnect(); }
+  }), { threshold: 0.4 });
+  termIO.observe(document.querySelector('.terminal'));
+
+  /* ── magnetic channel buttons ── */
+  document.querySelectorAll('.chan').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      el.style.transform = 'translate(' + ((e.clientX - r.left - r.width / 2) * 0.25) + 'px,' + ((e.clientY - r.top - r.height / 2) * 0.35) + 'px)';
+    });
+    el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+  });
+
+  /* ── scroll reveals ── */
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.12 });
+  document.querySelectorAll('.reveal, .reveal3d').forEach(el => io.observe(el));
+})();
+</script>
+
+<!-- ═══ live MMS: vendored three.js (self-contained, works offline) ═══ -->
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/vendor/OrbitControls.js"></script>
+<script src="assets/mms-sim.js"></script>
+
+</body>
+</html>

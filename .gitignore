@@ -1,0 +1,10 @@
+# working profile doc — contains personal contact details, keep local only
+PROFILE.md
+
+# early style experiments, not part of the published site
+demos/
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+*.tmp
