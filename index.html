@@ -187,76 +187,31 @@
   }
   .hero-words .down:hover { background-size: 100% 5px; letter-spacing: 0.22em; }
 
-  /* ── the gyroscope gimbal ── */
-  .gimbal {
-    width: 280px; height: 280px;
-    position: relative;
-    perspective: 900px;
+  /* ── mini LUKE, the hero artefact ── */
+  .luke-mini {
+    width: min(370px, 90vw);
     flex-shrink: 0;
-  }
-  .g-stage {
-    position: absolute;
-    inset: 0;
-    transform-style: preserve-3d;
-    animation: gDrift 14s ease-in-out infinite alternate;
-  }
-  @keyframes gDrift {
-    from { transform: rotateX(-12deg) rotateZ(-6deg); }
-    to   { transform: rotateX(16deg)  rotateZ(8deg); }
-  }
-  .ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 2px solid;
-    transform-style: preserve-3d;
-  }
-  .ring.r1 {
-    inset: 0;
-    border-color: rgba(14, 155, 141, 0.8);
-    box-shadow: 0 0 14px rgba(14, 155, 141, 0.25), inset 0 0 14px rgba(14, 155, 141, 0.12);
-    animation: spinY 9s linear infinite;
-  }
-  .ring.r2 {
-    inset: 11%;
-    border-color: rgba(111, 86, 232, 0.8);
-    box-shadow: 0 0 14px rgba(111, 86, 232, 0.25), inset 0 0 14px rgba(111, 86, 232, 0.12);
-    animation: spinX 7s linear infinite reverse;
-  }
-  .ring.r3 {
-    inset: 22%;
-    border-color: rgba(227, 80, 61, 0.8);
-    box-shadow: 0 0 14px rgba(227, 80, 61, 0.25), inset 0 0 14px rgba(227, 80, 61, 0.12);
-    animation: spinD 11s linear infinite;
-  }
-  @keyframes spinY { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-  @keyframes spinX { from { transform: rotateX(0deg); } to { transform: rotateX(360deg); } }
-  @keyframes spinD { from { transform: rotate3d(1, 1, 0, 0deg); } to { transform: rotate3d(1, 1, 0, 360deg); } }
-  .core {
-    position: absolute;
-    inset: 38%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffe9b0, var(--amber) 45%, #7a4a00 100%);
-    box-shadow: 0 0 30px rgba(255, 194, 51, 0.7), 0 0 80px rgba(255, 194, 51, 0.3);
-    animation: corePulse 3s ease-in-out infinite;
-  }
-  @keyframes corePulse {
-    0%, 100% { box-shadow: 0 0 30px rgba(255, 194, 51, 0.7), 0 0 80px rgba(255, 194, 51, 0.3); }
-    50%      { box-shadow: 0 0 44px rgba(255, 194, 51, 0.9), 0 0 110px rgba(255, 194, 51, 0.45); }
-  }
-  .g-label {
-    position: absolute;
-    bottom: -34px;
-    width: 100%;
     text-align: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.2em;
+  }
+  #luke-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 340 / 250;
+    touch-action: manipulation;
+  }
+  .lm-label {
+    margin-top: 6px;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
     color: rgba(11, 125, 112, 0.6);
   }
-  body.overdrive .ring.r1 { animation-duration: 1.8s; }
-  body.overdrive .ring.r2 { animation-duration: 1.4s; }
-  body.overdrive .ring.r3 { animation-duration: 2.2s; }
-  body.overdrive .core { filter: hue-rotate(-35deg); }
+  .lm-score {
+    margin-top: 6px;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--amber);
+  }
 
   /* ═══════════ TELEMETRY TICKER ═══════════ */
   .ticker {
@@ -870,7 +825,7 @@
   /* ═══════════ PHONE PASS ═══════════ */
   @media (max-width: 700px) {
     .hud { display: none; }
-    .gimbal { width: 210px; height: 210px; }
+    .luke-mini { width: min(320px, 92vw); }
     .section { padding: 70px 18px; }
     .hero { padding: 80px 18px 50px; gap: 44px; }
     .hero-words { text-align: center; }
@@ -998,14 +953,10 @@
     <a class="down" href="#about">initiate scroll ↓</a>
   </div>
 
-  <div class="gimbal" id="gimbal" title="click me">
-    <div class="g-stage">
-      <div class="ring r1"></div>
-      <div class="ring r2"></div>
-      <div class="ring r3"></div>
-      <div class="core"></div>
-    </div>
-    <p class="g-label">ATTITUDE REF · TAP CORE</p>
+  <div class="luke-mini">
+    <canvas id="luke-canvas" aria-label="interactive mini LUKE robot removing weeds"></canvas>
+    <p class="lm-label mono">FIELD UNIT LUKE · TAP THE SOIL TO PLANT A WEED</p>
+    <p class="lm-score mono" id="lm-score">WEEDS REMOVED: 0 · HERBICIDE USED: 0 mL</p>
   </div>
 </section>
 
@@ -1492,11 +1443,6 @@
 
   /* ── the drivable MMS lives in assets/mms-sim.js (WebGL) ── */
 
-  /* ── gimbal overdrive easter egg ── */
-  document.getElementById('gimbal').addEventListener('click', () => {
-    document.body.classList.toggle('overdrive');
-  });
-
   /* ── ticker + filmstrip seamless loops ── */
   const ticker = document.getElementById('ticker');
   ticker.innerHTML += ticker.innerHTML;
@@ -1564,6 +1510,9 @@
 <!-- ═══ darkroom gallery ═══ -->
 <script src="assets/photos.js"></script>
 <script src="assets/gallery.js"></script>
+
+<!-- ═══ mini LUKE hero artefact ═══ -->
+<script src="assets/luke-mini.js"></script>
 
 </body>
 </html>
