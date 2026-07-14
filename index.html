@@ -145,7 +145,7 @@
     padding: 80px 24px 60px;
     perspective: 1200px;
   }
-  .hero-words { max-width: 560px; }
+  .hero-words { max-width: 660px; text-align: center; }
   .hero-words .kicker {
     font-family: 'Space Mono', monospace;
     font-size: 0.82rem;
@@ -187,7 +187,12 @@
   }
   .hero-words .down:hover { background-size: 100% 5px; letter-spacing: 0.22em; }
 
-  /* ── mini LUKE, the hero artefact ── */
+  /* ── mini LUKE interlude ── */
+  .luke-sec {
+    display: flex;
+    justify-content: center;
+    padding: 0 24px 30px;
+  }
   .luke-mini {
     width: min(370px, 90vw);
     flex-shrink: 0;
@@ -966,13 +971,7 @@
     <p class="kicker">roboticist · mpc &amp; control · agri-robotics founder</p>
     <h1>Adersh Maruvattu</h1>
     <p class="tag">I teach machines to move — across sand arenas, assembly lines, and rice fields. PhD researcher at IIT Kanpur; co-founder &amp; CTO of Ceres FieldCheck.</p>
-    <a class="down" href="#about">initiate scroll ↓</a>
-  </div>
-
-  <div class="luke-mini">
-    <canvas id="luke-canvas" aria-label="interactive mini LUKE robot removing weeds"></canvas>
-    <p class="lm-label mono">FIELD UNIT LUKE · TAP THE SOIL TO PLANT A WEED</p>
-    <p class="lm-score mono" id="lm-score">WEEDS REMOVED: 0 · HERBICIDE USED: 0 mL</p>
+    <a class="down" href="#lab">initiate scroll ↓</a>
   </div>
 </section>
 
@@ -981,10 +980,59 @@
   <span>TELEMETRY STREAM&nbsp;&nbsp;▸&nbsp;&nbsp;13-DOF CHAIN NOMINAL&nbsp;&nbsp;▸&nbsp;&nbsp;WHEEL SLIP COMPENSATED&nbsp;&nbsp;▸&nbsp;&nbsp;LUKE FIELD UNIT ONLINE&nbsp;&nbsp;▸&nbsp;&nbsp;MPC HORIZON CONVERGED&nbsp;&nbsp;▸&nbsp;&nbsp;KANPUR ⇄ FRANKFURT LINK ACTIVE&nbsp;&nbsp;▸&nbsp;&nbsp;COFFEE RESERVES CRITICAL&nbsp;&nbsp;▸&nbsp;&nbsp;SECOND BREAKFAST SCHEDULED&nbsp;&nbsp;▸&nbsp;&nbsp;NO WEEDS WERE SPARED&nbsp;&nbsp;▸&nbsp;&nbsp;</span>
 </div></div>
 
+<!-- ═══ SANDWALKER LIVE SIM ═══ -->
+<section class="section" id="lab" data-wp="LAB" style="padding-top:60px">
+  <div class="wrap reveal">
+    <p class="eyebrow">// 01 — the lab</p>
+    <h2 class="title">Meet Sandwalker, live in your browser</h2>
+  </div>
+
+  <div class="mms-wrap reveal">
+    <div class="mms-frame">
+      <div id="mms-stage">
+        <div class="mms-fallback">
+          Your browser has WebGL turned off, so the live robot can't render here —<br>
+          the rest of the site works fine. Enable WebGL to meet Sandwalker.
+        </div>
+      </div>
+      <div class="mms-overlay">
+        <div class="mms-hud-title mono">SANDWALKER · 13-DOF · LIVE SIM</div>
+        <div id="mms-tele" class="mono"></div>
+      </div>
+      <div class="mms-controls">
+        <button type="button" id="mms-slip" class="mms-btn">TERRAIN SLIP: OFF</button>
+        <button type="button" id="mms-view" class="mms-btn">VIEW: ORBIT</button>
+        <span class="mms-hint mono">drag to orbit · S for slip · V for camera</span>
+      </div>
+    </div>
+
+    <div class="mms-legend mono">
+      <span><i style="background:#6f56e8"></i> reference path</span>
+      <span><i style="background:#c47f00"></i> tracked target</span>
+      <span><i style="background:#0e9b8d"></i> end-effector trail</span>
+    </div>
+
+    <div class="mms-caption">
+      <p>Formally it's the Mobile Manipulator System, the platform behind the papers further down. Sandwalker is easier to cheer for.</p>
+      <p>The real one carries its arm on a six-wheeled Ackermann rover with rocker-bogie suspension, run by Teensy and ESP32 boards and localised with a Kinect and AprilTag markers on a five-by-seven-metre sand arena. This browser version weighs about half a megabyte.</p>
+      <p>Hit <b>terrain slip</b> and the base begins to drift while the wheels over-spin — exactly the disturbance my slip-adaptive controller is built to absorb. Watch the tracking error climb as the arm fights to keep its end-effector on the violet path.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FIELD UNIT LUKE — interlude ═══ -->
+<section class="luke-sec" id="field-unit">
+  <div class="luke-mini reveal">
+    <canvas id="luke-canvas" aria-label="interactive mini LUKE robot removing weeds"></canvas>
+    <p class="lm-label mono">AND THIS IS FIELD UNIT LUKE · TAP THE SOIL TO PLANT A WEED</p>
+    <p class="lm-score mono" id="lm-score">WEEDS REMOVED: 0 · HERBICIDE USED: 0 mL</p>
+  </div>
+</section>
+
 <!-- ═══ PROFILE ═══ -->
 <section class="section" id="about" data-wp="PROFILE">
   <div class="wrap reveal">
-    <p class="eyebrow">// 01 — profile</p>
+    <p class="eyebrow">// 02 — profile</p>
     <h2 class="title">Engineer of things that move</h2>
     <div class="about-flex">
       <div class="words">
@@ -1017,45 +1065,6 @@
       <span class="chip">CoppeliaSim · MuJoCo</span>
       <span class="chip">3D Printing</span>
       <span class="chip">LaTeX</span>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ MMS LIVE SIM ═══ -->
-<section class="section" id="lab" data-wp="LAB" style="padding-top:40px">
-  <div class="wrap reveal">
-    <p class="eyebrow">// 02 — the lab</p>
-    <h2 class="title">The MMS, live in your browser</h2>
-  </div>
-
-  <div class="mms-wrap reveal">
-    <div class="mms-frame">
-      <div id="mms-stage">
-        <div class="mms-fallback">
-          Your browser has WebGL turned off, so the live robot can't render here —<br>
-          the rest of the site works fine. Enable WebGL to drive the MMS.
-        </div>
-      </div>
-      <div class="mms-overlay">
-        <div class="mms-hud-title mono">MMS · 13-DOF · LIVE SIM</div>
-        <div id="mms-tele" class="mono"></div>
-      </div>
-      <div class="mms-controls">
-        <button type="button" id="mms-slip" class="mms-btn">TERRAIN SLIP: OFF</button>
-        <button type="button" id="mms-view" class="mms-btn">VIEW: ORBIT</button>
-        <span class="mms-hint mono">drag to orbit · S for slip · V for camera</span>
-      </div>
-    </div>
-
-    <div class="mms-legend mono">
-      <span><i style="background:#6f56e8"></i> reference path</span>
-      <span><i style="background:#c47f00"></i> tracked target</span>
-      <span><i style="background:#0e9b8d"></i> end-effector trail</span>
-    </div>
-
-    <div class="mms-caption">
-      <p>The real one carries its arm on a six-wheeled Ackermann rover with rocker-bogie suspension, run by Teensy and ESP32 boards and localised with a Kinect and AprilTag markers on a five-by-seven-metre sand arena. This browser version weighs about half a megabyte.</p>
-      <p>Hit <b>terrain slip</b> and the base begins to drift while the wheels over-spin — exactly the disturbance my slip-adaptive controller is built to absorb. Watch the tracking error climb as the arm fights to keep its end-effector on the violet path.</p>
     </div>
   </div>
 </section>
@@ -1113,7 +1122,7 @@
         <div class="flipinner">
           <div class="flipface flipfront">
             <img src="assets/mms_annotated.jpg" alt="annotated 13-DOF mobile manipulator" loading="lazy">
-            <div class="label">MISSION_03 ▸ 13-DOF MMS</div>
+            <div class="label">MISSION_03 ▸ SANDWALKER</div>
           </div>
           <div class="flipface flipback">
             <h3>ANN-Based MPC for a 13-DOF System</h3>
