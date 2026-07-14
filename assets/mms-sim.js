@@ -663,7 +663,7 @@
   function resize() {
     const w = mount.clientWidth, h = mount.clientHeight;
     if (!w || !h) return;
-    renderer.setSize(w, h, false);
+    renderer.setSize(w, h);           // also sets canvas CSS size — critical on high-DPR phones
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }

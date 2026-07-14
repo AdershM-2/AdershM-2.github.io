@@ -841,26 +841,30 @@
     background-position: center;
   }
 
-  /* ═══════════ PHOTO BANDS — full-bleed photographs between sections ═════ */
-  .photo-band {
-    height: 340px;
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;   /* gentle parallax on desktop */
-    position: relative;
-    border-top: 1px solid rgba(14, 155, 141, 0.2);
-    border-bottom: 1px solid rgba(14, 155, 141, 0.2);
+  /* ═══════════ PRINT INTERLUDES — single photos mounted like prints ══════ */
+  .print {
+    text-align: center;
+    padding: 90px 24px 10px;
   }
-  @media (pointer: coarse) {
-    .photo-band { background-attachment: scroll; }  /* iOS ignores fixed */
+  .print img {
+    max-width: min(640px, 92%);
+    max-height: 74vh;
+    width: auto; height: auto;
+    display: inline-block;
+    background: #fff;
+    padding: 14px 14px 20px;
+    border: 1px solid rgba(26, 35, 48, 0.08);
+    border-radius: 4px;
+    box-shadow: 0 26px 55px rgba(30, 25, 60, 0.2);
+    transform: rotate(-0.7deg);
+    transition: transform 0.35s ease;
   }
-  .photo-band .pb-label {
-    position: absolute;
-    bottom: 14px; right: 18px;
-    font-size: 0.68rem;
+  .print:hover img { transform: rotate(0deg) scale(1.012); }
+  .print figcaption {
+    margin-top: 18px;
+    font-size: 0.7rem;
     letter-spacing: 0.24em;
-    color: rgba(255, 255, 255, 0.85);
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+    color: rgba(11, 125, 112, 0.65);
   }
 
   /* ═══════════ PHONE PASS ═══════════ */
@@ -882,7 +886,7 @@
     .dk-masonry { columns: 2; column-gap: 10px; }
     .dk-item { margin-bottom: 10px; }
     #dk-banner { height: 170px; margin: 30px 0 0; }
-    .photo-band { height: 210px; }
+    .print { padding: 60px 16px 0; }
     .lb-btn { padding: 8px 12px; }
     footer { font-size: 0.7rem; padding-left: 14px; padding-right: 14px; }
   }
@@ -902,7 +906,7 @@
     position: relative;
     touch-action: pan-y;     /* vertical swipes scroll the page; drags orbit */
   }
-  #mms-stage canvas { display: block; }
+  #mms-stage canvas { display: block; width: 100% !important; height: 100% !important; }
   .mms-overlay {
     position: absolute; top: 14px; left: 16px;
     pointer-events: none;
@@ -1102,11 +1106,6 @@
   <p class="strip-hint">VISUAL LOG — FIELDS, MACHINES, AND THE PEOPLE RESPONSIBLE</p>
 </div>
 
-<!-- ═══ PHOTO BAND I ═══ -->
-<div class="photo-band" style="background-image:url('assets/photos/large/photo-05.jpg')">
-  <span class="pb-label mono">FIELD RECORDING 01 · FROM THE DARKROOM</span>
-</div>
-
 <!-- ═══ MISSIONS ═══ -->
 <section class="section" id="work" data-wp="MISSIONS">
   <div class="wrap">
@@ -1202,6 +1201,12 @@
   </div>
 </section>
 
+<!-- ═══ PRINT INTERLUDE I ═══ -->
+<figure class="print reveal">
+  <img src="assets/photos/large/photo-31.jpg" alt="black-and-white photograph of a classic car on cobblestones" loading="lazy">
+  <figcaption class="mono">FROM THE DARKROOM · FRAME 31 OF 54</figcaption>
+</figure>
+
 <!-- ═══ PUBLICATIONS ═══ -->
 <section class="section" id="pubs" data-wp="TRANSMISSIONS">
   <div class="wrap">
@@ -1244,10 +1249,11 @@
   </div>
 </section>
 
-<!-- ═══ PHOTO BAND II ═══ -->
-<div class="photo-band" style="background-image:url('assets/photos/large/photo-08.jpg')">
-  <span class="pb-label mono">FIELD RECORDING 02 · FROM THE DARKROOM</span>
-</div>
+<!-- ═══ PRINT INTERLUDE II ═══ -->
+<figure class="print reveal">
+  <img src="assets/photos/large/photo-36.jpg" alt="harbour seen through window panes" loading="lazy">
+  <figcaption class="mono">FROM THE DARKROOM · FRAME 36 OF 54</figcaption>
+</figure>
 
 <!-- ═══ TRAJECTORY ═══ -->
 <section class="section" id="path" data-wp="TRAJECTORY" style="padding-top:40px">
