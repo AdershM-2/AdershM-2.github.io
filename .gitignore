@@ -4,6 +4,10 @@ PROFILE.md
 # early style experiments, not part of the published site
 demos/
 
+# raw photo originals (183 MB) — only the compressed copies ship
+assets/pictures for website/
+assets/photos/meta.json
+
 # OS / editor cruft
 Thumbs.db
 .DS_Store

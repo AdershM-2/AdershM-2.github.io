@@ -758,10 +758,108 @@
     line-height: 2;
   }
 
+  /* ═══════════ DARKROOM ═══════════ */
+  .dk-count { font-size: 0.72rem; letter-spacing: 0.22em; color: rgba(63, 214, 196, 0.6); margin-top: 18px; }
+  #dk-banner {
+    height: 260px;
+    max-width: 1150px;
+    margin: 44px auto 6px;
+    border-radius: 16px;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid rgba(63, 214, 196, 0.25);
+    box-shadow: 0 30px 70px rgba(0, 0, 5, 0.5);
+  }
+  .dk-year {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    color: var(--amber);
+    margin: 46px 0 18px;
+    text-align: center;
+  }
+  .dk-masonry { columns: 4 220px; column-gap: 14px; }
+  .dk-item {
+    margin: 0 0 14px;
+    break-inside: avoid;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(63, 214, 196, 0.18);
+    cursor: pointer;
+  }
+  .dk-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.35s ease, filter 0.35s ease;
+  }
+  .dk-item:hover img { transform: scale(1.045); filter: brightness(1.08); }
+
+  /* lightbox */
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(5, 8, 12, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #lightbox.open { display: flex; }
+  #lb-img { max-width: 92vw; max-height: 84vh; border-radius: 8px; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8); }
+  .lb-btn {
+    position: absolute;
+    background: rgba(14, 20, 29, 0.85);
+    color: var(--teal);
+    border: 1px solid rgba(63, 214, 196, 0.4);
+    border-radius: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.05rem;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .lb-btn:hover { box-shadow: 0 0 16px rgba(63, 214, 196, 0.35); }
+  #lb-close { top: 18px; right: 18px; }
+  #lb-prev { left: 14px; top: 50%; transform: translateY(-50%); }
+  #lb-next { right: 14px; top: 50%; transform: translateY(-50%); }
+  #lb-count {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(234, 241, 245, 0.7);
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+  }
+
+  /* quote with photo backdrop (set by gallery.js) */
+  .quote.has-photo {
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* ═══════════ PHONE PASS ═══════════ */
   @media (max-width: 700px) {
     .hud { display: none; }
     .gimbal { width: 210px; height: 210px; }
-    .arm-caption { text-align: center; }
+    .section { padding: 70px 18px; }
+    .hero { padding: 80px 18px 50px; gap: 44px; }
+    .hero-words { text-align: center; }
+    .hero-words .tag { font-size: 1.05rem; }
+    .about-flex { gap: 34px; }
+    .photo-card { flex: 1 1 260px; }
+    #mms-stage { height: clamp(300px, 52vh, 440px); }
+    .mms-hint { display: none; }
+    .strip img { height: 150px; width: 225px; margin-right: 16px; }
+    .quote { padding: 90px 20px 80px; }
+    .term-body { font-size: 0.8rem; padding: 20px 14px 24px; }
+    .pub { padding-left: 18px; }
+    .dk-masonry { columns: 2; column-gap: 10px; }
+    .dk-item { margin-bottom: 10px; }
+    #dk-banner { height: 170px; margin: 30px 0 0; }
+    .lb-btn { padding: 8px 12px; }
+    footer { font-size: 0.7rem; padding-left: 14px; padding-right: 14px; }
   }
   /* ═══════════ MMS LIVE SIM ═══════════ */
   .mms-wrap { max-width: 980px; margin: 30px auto 0; }
@@ -770,14 +868,14 @@
     border: 1px solid rgba(63, 214, 196, 0.35);
     border-radius: 16px;
     overflow: hidden;
-    background: #f5f3ed;
+    background: #ffffff;
     box-shadow: 0 30px 70px rgba(0, 0, 5, 0.5);
   }
   #mms-stage {
     width: 100%;
     height: clamp(360px, 60vh, 560px);
     position: relative;
-    touch-action: none;      /* let OrbitControls own touch gestures */
+    touch-action: pan-y;     /* vertical swipes scroll the page; drags orbit */
   }
   #mms-stage canvas { display: block; }
   .mms-overlay {
@@ -826,7 +924,7 @@
     font-family: 'Space Mono', monospace;
     color: rgba(40, 48, 60, 0.75);
     line-height: 1.9;
-    background: #f5f3ed;
+    background: #ffffff;
   }
   #mms-stage.nogl canvas { display: none; }
   #mms-stage.nogl .mms-fallback { display: flex; }
@@ -897,7 +995,7 @@
         <p class="lede">I'm a PhD candidate in Mechanical Engineering at IIT Kanpur, working with Prof. Ashish Dutta on a stubborn, wonderful problem: making a 13-degree-of-freedom mobile manipulator — a six-wheeled rover carrying a robotic arm — trace precise paths with its end effector while its wheels sink and slip in sand. My answer so far is model predictive control that learns the slip as it happens and quietly shifts the work from the struggling base to the arm.</p>
         <p class="lede">Before the PhD I spent two and a half years at Maruti Suzuki, making assembly lines flow faster in Gurugram — and, during the 2018 Kerala floods, running the worst-hit workshop in the state without missing a single delivery commitment. That year taught me more about engineering under constraints than any course ever has.</p>
         <p class="lede">These days I split my life between the lab and a startup. As co-founder and CTO of <a href="https://www.ceresfieldcheck.com/" target="_blank" rel="noopener">Ceres FieldCheck</a>, I build LUKE — an autonomous field robot that pulls weeds mechanically and catches crop disease early, so small farmers can stop spending half their income on chemicals. We won the Indo-German DWIH Innovators Connect in 2023, and the mission hasn't changed since: technology should serve those who feed us.</p>
-        <p class="lede">Off duty I'm a Lord of the Rings fan who captained — and drove for — Team Unwired, our BAJA SAE India off-road racing team. A taste for vehicles that have to survive rough terrain, it turns out, never really leaves you.</p>
+        <p class="lede">Off duty I'm a hobbyist photographer — there's a whole <a href="#darkroom">darkroom</a> further down this page — a Lord of the Rings fan, and the former captain and driver of Team Unwired, our BAJA SAE India off-road racing team. A taste for machines that survive rough terrain, it turns out, never really leaves you.</p>
       </div>
       <div class="tilt-scene">
         <figure class="photo-card" data-tilt>
@@ -1167,6 +1265,20 @@
   </div>
 </section>
 
+<!-- ═══ DARKROOM ═══ -->
+<section class="section" id="darkroom" data-wp="DARKROOM" style="padding-top:40px">
+  <div class="wrap">
+    <p class="eyebrow reveal">// 06 — the darkroom</p>
+    <h2 class="title reveal">Through the lens</h2>
+    <p class="lede reveal">Robots are the day job; light is the hobby. Everything below came off a phone camera on walks between labs, conferences, and home — mountain trails, northern streets, and an unreasonable number of campus flowers. Tap any frame to see it properly.</p>
+    <p class="dk-count mono reveal" id="dk-count"></p>
+  </div>
+  <div id="dk-banner" class="reveal" aria-hidden="true"></div>
+  <div class="wrap">
+    <div id="dk-grid"></div>
+  </div>
+</section>
+
 <!-- ═══ QUOTE ═══ -->
 <section class="quote">
   <blockquote class="reveal3d">"The cosmos is within us. We're made of star stuff. We are a way for the cosmos to know itself."</blockquote>
@@ -1176,7 +1288,7 @@
 <!-- ═══ COMMS ═══ -->
 <section class="section" id="contact" data-wp="COMMS" style="text-align:center; padding-bottom:130px; padding-top:20px">
   <div class="wrap reveal">
-    <p class="eyebrow">// 06 — open a channel</p>
+    <p class="eyebrow">// 07 — open a channel</p>
     <h2 class="title" style="margin-bottom:6px">Comms</h2>
     <div class="terminal">
       <div class="term-head"><i class="d1"></i><i class="d2"></i><i class="d3"></i>&nbsp;guest@adersh — ssh</div>
@@ -1395,10 +1507,23 @@
 })();
 </script>
 
+<!-- ═══ lightbox ═══ -->
+<div id="lightbox" role="dialog" aria-label="photo viewer">
+  <button type="button" id="lb-close" class="lb-btn" aria-label="close">✕</button>
+  <button type="button" id="lb-prev" class="lb-btn" aria-label="previous photo">←</button>
+  <img id="lb-img" alt="photograph, enlarged">
+  <button type="button" id="lb-next" class="lb-btn" aria-label="next photo">→</button>
+  <span id="lb-count" class="mono"></span>
+</div>
+
 <!-- ═══ live MMS: vendored three.js (self-contained, works offline) ═══ -->
 <script src="assets/vendor/three.min.js"></script>
 <script src="assets/vendor/OrbitControls.js"></script>
 <script src="assets/mms-sim.js"></script>
+
+<!-- ═══ darkroom gallery ═══ -->
+<script src="assets/photos.js"></script>
+<script src="assets/gallery.js"></script>
 
 </body>
 </html>

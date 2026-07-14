@@ -40,7 +40,7 @@
 
   // ---- scene / camera / renderer ------------------------------------------
   const scene = new T.Scene();
-  const BG = new T.Color(0xf5f3ed);     // warm studio white
+  const BG = new T.Color(0xffffff);     // pure studio white
   scene.background = BG;
   scene.fog = new T.Fog(BG, 9, 24);
 
@@ -51,7 +51,7 @@
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.outputEncoding = T.sRGBEncoding;
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.25;   // lift so the white stays white under ACES
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = T.PCFSoftShadowMap;
   mount.appendChild(renderer.domElement);
@@ -104,7 +104,7 @@
   // infinite-looking studio floor
   const floor = new T.Mesh(
     new T.CircleGeometry(30, 48),
-    new T.MeshStandardMaterial({ color: 0xf5f3ed, roughness: 1, metalness: 0 })
+    new T.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0 })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -0.002;
