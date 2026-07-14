@@ -187,35 +187,21 @@
   }
   .hero-words .down:hover { background-size: 100% 5px; letter-spacing: 0.22em; }
 
-  /* ── mini LUKE interlude ── */
-  .luke-sec {
-    display: flex;
-    justify-content: center;
-    padding: 0 24px 30px;
-  }
-  .luke-mini {
-    width: min(370px, 90vw);
-    flex-shrink: 0;
-    text-align: center;
-  }
-  #luke-canvas {
+  /* ── LUKE 3D interlude ── */
+  .luke-sec { padding: 20px 24px 60px; }
+  .luke-sec .wrap { margin-left: auto; margin-right: auto; }
+  #luke-stage {
     width: 100%;
-    height: auto;
-    display: block;
-    aspect-ratio: 340 / 250;
-    touch-action: manipulation;
+    height: clamp(340px, 52vh, 480px);
+    position: relative;
+    touch-action: pan-y;
   }
-  .lm-label {
-    margin-top: 6px;
-    font-size: 0.66rem;
-    letter-spacing: 0.18em;
-    color: rgba(11, 125, 112, 0.6);
-  }
-  .lm-score {
+  #luke-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+  #lm-score {
     margin-top: 6px;
     font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    color: var(--amber);
+    letter-spacing: 0.12em;
+    color: #c07a00;
   }
 
   /* ═══════════ TELEMETRY TICKER ═══════════ */
@@ -846,7 +832,7 @@
   /* ═══════════ PHONE PASS ═══════════ */
   @media (max-width: 700px) {
     .hud { display: none; }
-    .luke-mini { width: min(320px, 92vw); }
+    #luke-stage { height: clamp(280px, 45vh, 380px); }
     .section { padding: 70px 18px; }
     .hero { padding: 80px 18px 50px; gap: 44px; }
     .hero-words { text-align: center; }
@@ -1020,12 +1006,29 @@
   </div>
 </section>
 
-<!-- ═══ FIELD UNIT LUKE — interlude ═══ -->
+<!-- ═══ FIELD UNIT LUKE — 3D interlude ═══ -->
 <section class="luke-sec" id="field-unit">
-  <div class="luke-mini reveal">
-    <canvas id="luke-canvas" aria-label="interactive mini LUKE robot removing weeds"></canvas>
-    <p class="lm-label mono">AND THIS IS FIELD UNIT LUKE · TAP THE SOIL TO PLANT A WEED</p>
-    <p class="lm-score mono" id="lm-score">WEEDS REMOVED: 0 · HERBICIDE USED: 0 mL</p>
+  <div class="wrap reveal" style="max-width:980px; margin-bottom:22px">
+    <p class="eyebrow">// and this is field unit luke</p>
+    <p class="lede">Sandwalker's cousin from the startup side. Click anywhere on the soil to plant a weed — LUKE will find it, drive over, and pull it out. Mechanically. Always mechanically.</p>
+  </div>
+  <div class="mms-wrap reveal">
+    <div class="mms-frame">
+      <div id="luke-stage">
+        <div class="mms-fallback">
+          WebGL is off in this browser, so LUKE is out in the field —<br>
+          the rest of the site works fine.
+        </div>
+      </div>
+      <div class="mms-overlay">
+        <div class="mms-hud-title mono">FIELD UNIT LUKE · LIVE</div>
+        <div id="lm-score" class="mono">WEEDS REMOVED: 0 · HERBICIDE USED: 0 mL</div>
+      </div>
+      <div class="mms-controls">
+        <button type="button" id="lk-plant" class="mms-btn">PLANT A WEED</button>
+        <span class="mms-hint mono">click the soil to plant a weed · drag to orbit</span>
+      </div>
+    </div>
   </div>
 </section>
 
