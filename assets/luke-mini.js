@@ -60,7 +60,8 @@
   controls.addEventListener('start', () => { controls.autoRotate = false; });
 
   // ---- golden field light ---------------------------------------------------
-  scene.add(new T.HemisphereLight(0xfff6e6, 0xc9b490, 0.45));
+  const hemi = new T.HemisphereLight(0xfff6e6, 0xc9b490, 0.45);
+  scene.add(hemi);
   const sun = new T.DirectionalLight(0xffe9c4, 1.5);
   sun.position.set(4, 5, 2.5);
   sun.castShadow = true;
@@ -220,6 +221,25 @@
   tool.position.set(0, 0.3, 0);
   luke.add(tool);
 
+  // headlights (night shift only)
+  const lensMat = new T.MeshStandardMaterial({
+    color: 0xdfe8ff, roughness: 0.2, metalness: 0.4,
+    emissive: 0xcfe0ff, emissiveIntensity: 0
+  });
+  for (const s of [1, -1]) {
+    const lens = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.01, 10), lensMat);
+    lens.rotation.z = Math.PI / 2;
+    lens.position.set(0.47, 0.36, s * 0.07);
+    luke.add(lens);
+  }
+  const headlight = new T.SpotLight(0xcfe4ff, 0, 3.2, 0.5, 0.5, 1.1);
+  headlight.position.set(0.46, 0.4, 0);
+  const headTgt = new T.Object3D();
+  headTgt.position.set(2.0, -0.2, 0);
+  luke.add(headTgt);
+  headlight.target = headTgt;
+  luke.add(headlight);
+
   // soft contact blob
   const blobTex = (function () {
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -258,6 +278,31 @@
     return g;
   }
   const flies = [butterfly(0xe3503d), butterfly(0x6f56e8)];
+
+  // fireflies for the night shift
+  const fireTex = (function () {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+    gr.addColorStop(0, 'rgba(255,214,120,1)');
+    gr.addColorStop(0.4, 'rgba(255,190,80,0.5)');
+    gr.addColorStop(1, 'rgba(255,190,80,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return new T.CanvasTexture(c);
+  })();
+  const fireflies = [];
+  for (let i = 0; i < 7; i++) {
+    const s = new T.Sprite(new T.SpriteMaterial({
+      map: fireTex, transparent: true, opacity: 0, depthWrite: false,
+      blending: T.AdditiveBlending
+    }));
+    s.scale.setScalar(0.12);
+    s.visible = false;
+    s.userData.ph = Math.random() * 6.28;
+    scene.add(s);
+    fireflies.push(s);
+  }
+  let nightMode = false;
 
   // ---- weeds -----------------------------------------------------------------
   const weedMat = new T.MeshStandardMaterial({ color: 0xd9422e, roughness: 0.7 });
@@ -344,6 +389,7 @@
   // ---- LUKE brain -------------------------------------------------------------
   let removed = 0;
   function updateScore() {
+    window.__weedsRemoved = removed;
     if (scoreEl) scoreEl.textContent = 'WEEDS REMOVED: ' + removed + ' · HERBICIDE USED: 0 mL';
   }
   updateScore();
@@ -416,6 +462,7 @@
         const wp = targetWeed.g.position;
         burst(wp.x, wp.z);
         plusOne(wp.x, wp.z);
+        targetWeed.g.traverse(o => { if (o.geometry) o.geometry.dispose(); });
         scene.remove(targetWeed.g);
         weeds.splice(weeds.indexOf(targetWeed), 1);
         targetWeed = null;
@@ -456,15 +503,28 @@
       c.rotation.z = 0.06 * Math.sin(simTime * 1.4 + c.userData.ph);
     }
 
-    // butterflies
-    flies.forEach((f, i) => {
-      const t = simTime * (0.24 + i * 0.07) + i * 3;
-      f.position.set(Math.sin(t) * 2.1, 0.5 + 0.18 * Math.sin(t * 2.7), Math.cos(t * 0.8) * 1.3);
-      f.rotation.y = -t;
-      const flap = Math.sin(simTime * 14 + f.userData.ph) * 0.9;
-      f.userData.w1.rotation.y = flap;
-      f.userData.w2.rotation.y = Math.PI - flap;
-    });
+    // butterflies by day, fireflies by night
+    if (!nightMode) {
+      flies.forEach((f, i) => {
+        const t = simTime * (0.24 + i * 0.07) + i * 3;
+        f.position.set(Math.sin(t) * 2.1, 0.5 + 0.18 * Math.sin(t * 2.7), Math.cos(t * 0.8) * 1.3);
+        f.rotation.y = -t;
+        const flap = Math.sin(simTime * 14 + f.userData.ph) * 0.9;
+        f.userData.w1.rotation.y = flap;
+        f.userData.w2.rotation.y = Math.PI - flap;
+      });
+    } else {
+      fireflies.forEach((s, i) => {
+        const t = simTime * (0.15 + i * 0.03) + i * 2.2;
+        s.position.set(
+          Math.sin(t * 1.3 + i) * 2.2,
+          0.3 + 0.25 * Math.sin(t * 2.1 + i * 1.7),
+          Math.cos(t * 0.9) * 1.4);
+        s.material.opacity = 0.35 + 0.55 * Math.max(0, Math.sin(simTime * 2.2 + s.userData.ph));
+      });
+      // headlight follows LUKE's nose
+      headTgt.position.set(2.0, -0.2, 0);
+    }
 
     // particles fall
     for (const p of parts) {
@@ -486,6 +546,28 @@
     controls.update();
     renderer.render(scene, camera);
   }
+
+  // ---- night shift: moonlight, headlights, fireflies ---------------------------
+  function applyShift(s) {
+    nightMode = s === 'night';
+    const n = nightMode;
+    const bg = new T.Color(n ? 0x0e1524 : 0xffffff);
+    scene.background = bg;
+    scene.fog.color.copy(bg);
+    floor.material.color.set(n ? 0x131b2c : 0xffffff);
+    field.material.color.set(n ? 0x6e5433 : 0xa87b4c);
+    hemi.intensity = n ? 0.18 : 0.45;
+    sun.intensity = n ? 0.45 : 1.5;
+    sun.color.set(n ? 0xa9c4ff : 0xffe9c4);
+    fill.intensity = n ? 0.22 : 0.3;
+    fill.color.set(n ? 0x3fd6c4 : 0xdfe9ff);
+    headlight.intensity = n ? 1.7 : 0;
+    lensMat.emissiveIntensity = n ? 2.4 : 0;
+    for (const f of flies) f.visible = !n;
+    for (const s2 of fireflies) s2.visible = n;
+  }
+  addEventListener('shiftchange', e => applyShift(e.detail));
+  applyShift(document.documentElement.getAttribute('data-shift') || 'day');
 
   // ---- sizing + visibility gating ---------------------------------------------
   function resize() {

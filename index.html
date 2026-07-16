@@ -9,6 +9,23 @@
 <meta property="og:description" content="I teach machines to move — across sand arenas, assembly lines, and rice fields.">
 <meta property="og:image" content="assets/adersh.jpg">
 <meta name="theme-color" content="#f7f5f0">
+<script>
+/* set day/night before first paint: stored preference, else local hour */
+(function () {
+  var s = 'day';
+  try {
+    s = localStorage.getItem('shift');
+    if (!s) { var h = new Date().getHours(); s = (h >= 19 || h < 6) ? 'night' : 'day'; }
+  } catch (e) { s = 'day'; }
+  s = s === 'night' ? 'night' : 'day';
+  document.documentElement.setAttribute('data-shift', s);
+  window.__syncThemeMeta = function (sh) {
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', sh === 'night' ? '#0c1118' : '#f7f5f0');
+  };
+  window.__syncThemeMeta(s);
+})();
+</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -33,7 +50,84 @@
     color: var(--text);
     overflow-x: hidden;
     cursor: crosshair;
+    transition: background-color 0.5s ease, color 0.5s ease;
   }
+
+  /* ═══════════ NIGHT SHIFT — the site's second identity ═══════════ */
+  :root[data-shift="night"] {
+    --ink: #0c1118;
+    --panel: #0e141d;
+    --coral: #ff7d6b;
+    --amber: #ffc233;
+    --violet: #9d8cff;
+    --teal: #3fd6c4;
+    --line: rgba(63, 214, 196, 0.14);
+    --text: #eaf1f5;
+    --dim: rgba(234, 241, 245, 0.85);
+  }
+  [data-shift="night"] .glow {
+    background:
+      radial-gradient(48% 54% at 14% 20%, rgba(255, 125, 107, 0.16), transparent 70%),
+      radial-gradient(52% 58% at 86% 26%, rgba(157, 140, 255, 0.16), transparent 70%),
+      radial-gradient(58% 60% at 55% 92%, rgba(63, 214, 196, 0.11), transparent 70%),
+      var(--ink);
+  }
+  [data-shift="night"] .hud { color: rgba(63, 214, 196, 0.75); text-shadow: 0 0 8px rgba(63, 214, 196, 0.3); }
+  [data-shift="night"] #reticle { border-color: rgba(63, 214, 196, 0.7); }
+  [data-shift="night"] #reticle::before, [data-shift="night"] #reticle::after { background: rgba(63, 214, 196, 0.7); }
+  [data-shift="night"] .ticker { background: rgba(14, 20, 29, 0.6); }
+  [data-shift="night"] .ticker-inner { color: rgba(63, 214, 196, 0.65); }
+  [data-shift="night"] .hero-words .down { color: #fff; }
+  [data-shift="night"] .lede a:hover { color: #fff; border-color: #fff; }
+  [data-shift="night"] .photo-card { border-color: rgba(63, 214, 196, 0.25); box-shadow: 0 30px 60px rgba(0, 0, 5, 0.5); }
+  [data-shift="night"] .photo-card .cap { color: rgba(63, 214, 196, 0.7); }
+  [data-shift="night"] .chips-label { color: rgba(63, 214, 196, 0.55); }
+  [data-shift="night"] .chip { border-color: rgba(157, 140, 255, 0.35); }
+  [data-shift="night"] .chip:hover { color: #fff; box-shadow: 0 0 14px rgba(255, 194, 51, 0.25); }
+  [data-shift="night"] .strip img { border-color: rgba(63, 214, 196, 0.3); box-shadow: 0 12px 30px rgba(0, 0, 5, 0.4); background: var(--panel); }
+  [data-shift="night"] .strip-hint { color: rgba(63, 214, 196, 0.5); }
+  [data-shift="night"] .flipface { border-color: rgba(63, 214, 196, 0.25); box-shadow: none; }
+  [data-shift="night"] .cssfront {
+    background:
+      repeating-linear-gradient(0deg, rgba(63,214,196,0.07) 0 1px, transparent 1px 23px),
+      repeating-linear-gradient(90deg, rgba(63,214,196,0.07) 0 1px, transparent 1px 23px),
+      var(--panel);
+  }
+  [data-shift="night"] .cssfront .big { -webkit-text-stroke-color: rgba(157, 140, 255, 0.8); }
+  [data-shift="night"] .flipback .stamp { color: rgba(63, 214, 196, 0.7); }
+  [data-shift="night"] .traj::before { border-left-color: rgba(63, 214, 196, 0.35); }
+  [data-shift="night"] .print img { border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 26px 55px rgba(0, 0, 5, 0.55); }
+  [data-shift="night"] .print figcaption { color: rgba(63, 214, 196, 0.6); }
+  [data-shift="night"] .dk-count { color: rgba(63, 214, 196, 0.6); }
+  [data-shift="night"] footer { color: rgba(234, 241, 245, 0.45); }
+  [data-shift="night"] .mms-frame { background: #0d1220; border-color: rgba(63, 214, 196, 0.28); }
+  [data-shift="night"] .mms-overlay { color: rgba(63, 214, 196, 0.85); }
+  [data-shift="night"] .mms-hud-title { color: #ffc233; }
+  [data-shift="night"] #mms-tele .warn { color: #ff7d6b; }
+  [data-shift="night"] #mms-tele .ok { color: #3fd6c4; }
+  [data-shift="night"] .mms-btn { color: #3fd6c4; background: rgba(10, 15, 22, 0.7); border-color: rgba(63, 214, 196, 0.4); }
+  [data-shift="night"] #mms-slip.on { color: #ff7d6b; border-color: rgba(255, 125, 107, 0.6); }
+  [data-shift="night"] .mms-hint { color: rgba(234, 241, 245, 0.4); }
+  [data-shift="night"] .mms-legend { color: rgba(234, 241, 245, 0.6); }
+  [data-shift="night"] .mms-fallback { background: #0d1220; color: rgba(234, 241, 245, 0.7); }
+
+  #shift-toggle {
+    position: fixed;
+    top: 14px; right: 18px;
+    z-index: 115;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    color: var(--teal);
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(14, 155, 141, 0.4);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, background-color 0.4s, color 0.4s;
+  }
+  #shift-toggle:hover { box-shadow: 0 0 14px rgba(14, 155, 141, 0.35); }
+  [data-shift="night"] #shift-toggle { background: rgba(10, 15, 22, 0.75); border-color: rgba(63, 214, 196, 0.4); }
   a { cursor: pointer; }
   h1, h2, h3 { font-family: 'Unbounded', sans-serif; }
   .mono { font-family: 'Space Mono', monospace; }
@@ -44,7 +138,7 @@
     position: fixed;
     inset: 0;
     z-index: 200;
-    background: #f2efe8;
+    background: var(--ink);
     display: grid;
     place-content: center;
     transition: opacity 0.5s ease;
@@ -201,7 +295,7 @@
     margin-top: 6px;
     font-size: 0.72rem;
     letter-spacing: 0.12em;
-    color: #c07a00;
+    color: var(--amber);
   }
 
   /* ═══════════ TELEMETRY TICKER ═══════════ */
@@ -533,7 +627,8 @@
     margin-top: 14px;
   }
   .flipback .stamp a { color: var(--teal); text-decoration: none; }
-  .flipback .stamp a:hover { color: #fff; }
+  .flipback .stamp a:hover { color: var(--text); }
+  [data-shift="night"] .flipback .stamp a:hover { color: #fff; }
 
   /* ═══════════ PUBLICATIONS ═══════════ */
   .pubs { margin-top: 40px; }
@@ -656,6 +751,7 @@
   .term-head i.d3 { background: var(--teal); }
   .term-body {
     background: #0a0f16;
+    color: #eaf1f5;              /* terminal interior is always dark — keep its text light in both shifts */
     padding: 26px 24px 30px;
     font-family: 'Space Mono', monospace;
     font-size: 0.92rem;
@@ -717,47 +813,121 @@
     border: 1px solid rgba(14, 155, 141, 0.3);
     box-shadow: 0 24px 55px rgba(30, 25, 60, 0.3);
   }
-  .dk-roll-head {
+  /* the carousel viewport */
+  #helix-stage {
+    width: 100%;
+    height: clamp(380px, 56vh, 540px);
+    position: relative;
+    touch-action: pan-y;
+  }
+  #helix-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+  .hx-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hx-btn { padding: 6px 11px; font-size: 0.68rem; }
+  .hx-btn.on { color: var(--amber); border-color: currentColor; }
+
+  /* legend swatches (theme-aware) */
+  .mms-legend .lg-violet { background: var(--violet); }
+  .mms-legend .lg-amber  { background: var(--amber); }
+  .mms-legend .lg-teal   { background: var(--teal); }
+
+  /* touch d-pad for drive mode */
+  .mms-dpad {
+    display: none;
+    position: absolute;
+    right: 14px; bottom: 84px;   /* clear of the wrapped controls row on phones */
+    z-index: 6;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .mms-dpad.show { display: flex; }
+  @media (pointer: fine) { .mms-dpad { display: none !important; } }
+  .mms-dpad .row { display: flex; gap: 6px; }
+  .mms-dpad button {
+    width: 46px; height: 42px;
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    color: #0b7d70;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(11, 125, 112, 0.45);
+    border-radius: 8px;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  [data-shift="night"] .mms-dpad button { color: #3fd6c4; background: rgba(10, 15, 22, 0.75); border-color: rgba(63, 214, 196, 0.4); }
+
+  /* interactive terminal */
+  #term-hist .tl { white-space: pre-wrap; }
+  #term-hist .tl.dim { color: rgba(234, 241, 245, 0.6); }
+  .term-iline { display: flex; gap: 10px; align-items: baseline; }
+  #term-in {
+    flex: 1;
+    min-width: 60px;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.92rem;
+    color: #eaf1f5;
+    caret-color: #ffc233;
+    padding: 0;
+  }
+
+  /* mission rail: a rover rides the page */
+  #rail {
+    position: fixed;
+    left: 22px; top: 50%;
+    transform: translateY(-50%);
+    height: 54vh;
+    z-index: 105;
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    align-items: baseline;
-    margin: 42px 4px 12px;
+    align-items: center;
   }
-  .dk-roll-title {
-    font-size: 0.8rem;
-    letter-spacing: 0.28em;
-    color: var(--amber);
+  #rail::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 2px; margin-left: -1px;
+    background: var(--line);
+    border-radius: 2px;
   }
-  .dk-roll-hint {
-    font-size: 0.68rem;
+  #rail a.dot {
+    position: relative;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--teal);
+    background: var(--ink);
+    z-index: 1;
+    transition: background-color 0.25s, transform 0.2s, border-color 0.25s;
+  }
+  #rail a.dot:hover { transform: scale(1.35); }
+  #rail a.dot.on { background: var(--amber); border-color: var(--amber); }
+  #rail a.dot .lbl {
+    position: absolute;
+    left: 18px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
     letter-spacing: 0.18em;
-    color: rgba(26, 35, 48, 0.45);
+    color: var(--teal);
+    opacity: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.2s;
   }
-  .dk-roll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    background:
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.16) 0 9px, transparent 9px 28px) 6px 7px / 100% 9px no-repeat,
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.16) 0 9px, transparent 9px 28px) 6px calc(100% - 16px) / 100% 9px no-repeat,
-      #141a24;
-    border-radius: 12px;
-    padding: 26px 14px;
-    box-shadow: 0 18px 44px rgba(30, 25, 60, 0.22);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(63, 214, 196, 0.5) transparent;
+  #rail a.dot:hover .lbl { opacity: 1; }
+  #rail-rover {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    color: var(--coral);
+    pointer-events: none;
   }
-  .dk-roll img {
-    height: 160px;
-    width: auto;
-    flex-shrink: 0;
-    border-radius: 4px;
-    cursor: pointer;
-    scroll-snap-align: start;
-    transition: transform 0.3s ease, filter 0.3s ease;
-  }
-  .dk-roll img:hover { transform: scale(1.04); filter: brightness(1.1); }
+  @media (max-width: 1099px) { #rail { display: none; } }
 
   /* lightbox */
   #lightbox {
@@ -835,7 +1005,9 @@
     #luke-stage { height: clamp(280px, 45vh, 380px); }
     .section { padding: 70px 18px; }
     .hero { padding: 80px 18px 50px; gap: 44px; }
-    .hero-words { text-align: center; }
+    .hero-words { text-align: center; max-width: 100%; }
+    .hero-words .kicker { letter-spacing: 0.16em; font-size: 0.7rem; }
+    .hero-words h1 { font-size: clamp(1.6rem, 7.6vw, 2.6rem); }
     .hero-words .tag { font-size: 1.05rem; }
     .about-flex { gap: 34px; }
     .photo-card { flex: 1 1 260px; }
@@ -845,8 +1017,7 @@
     .quote { padding: 90px 20px 80px; }
     .term-body { font-size: 0.8rem; padding: 20px 14px 24px; }
     .pub { padding-left: 18px; }
-    .dk-roll img { height: 120px; }
-    .dk-roll { padding: 22px 10px; gap: 8px; }
+    #term-in { font-size: 16px; }   /* under 16px iOS Safari zooms the page on focus */
     #dk-banner { height: 170px; margin: 30px 0 0; }
     .print { padding: 60px 16px 0; }
     .lb-btn { padding: 8px 12px; }
@@ -882,7 +1053,9 @@
   .mms-controls {
     position: absolute; bottom: 14px; left: 16px; right: 16px;
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    pointer-events: none;        /* only the buttons intercept; the canvas gets the rest */
   }
+  .mms-controls .mms-btn { pointer-events: auto; }
   .mms-btn {
     pointer-events: auto;
     cursor: pointer;
@@ -942,13 +1115,16 @@
 <canvas id="space"></canvas>
 <div class="grid"></div>
 <div id="reticle"></div>
+<button type="button" id="shift-toggle" class="mono" aria-label="toggle day or night shift">NIGHT SHIFT ▸</button>
+<nav id="rail" aria-label="page waypoints"></nav>
 
 <div class="hud">
   SYS::ADERSH_M<br>
   CURSOR <b id="hud-cur">[----,----]</b><br>
   LOOP <b id="hud-fps">-- HZ</b><br>
   DEPTH <b id="hud-scr">0%</b><br>
-  WAYPOINT <b id="hud-wp">HOME</b>
+  WAYPOINT <b id="hud-wp">HOME</b><br>
+  SHIFT <b id="hud-shift">DAY</b>
 </div>
 
 <!-- ═══ HERO ═══ -->
@@ -963,7 +1139,7 @@
 
 <!-- ═══ TELEMETRY TICKER ═══ -->
 <div class="ticker"><div class="ticker-inner" id="ticker">
-  <span>TELEMETRY STREAM&nbsp;&nbsp;▸&nbsp;&nbsp;13-DOF CHAIN NOMINAL&nbsp;&nbsp;▸&nbsp;&nbsp;WHEEL SLIP COMPENSATED&nbsp;&nbsp;▸&nbsp;&nbsp;LUKE FIELD UNIT ONLINE&nbsp;&nbsp;▸&nbsp;&nbsp;MPC HORIZON CONVERGED&nbsp;&nbsp;▸&nbsp;&nbsp;KANPUR ⇄ FRANKFURT LINK ACTIVE&nbsp;&nbsp;▸&nbsp;&nbsp;COFFEE RESERVES CRITICAL&nbsp;&nbsp;▸&nbsp;&nbsp;SECOND BREAKFAST SCHEDULED&nbsp;&nbsp;▸&nbsp;&nbsp;NO WEEDS WERE SPARED&nbsp;&nbsp;▸&nbsp;&nbsp;</span>
+  <span>TELEMETRY STREAM&nbsp;&nbsp;▸&nbsp;&nbsp;13-DOF CHAIN NOMINAL&nbsp;&nbsp;▸&nbsp;&nbsp;WHEEL SLIP COMPENSATED&nbsp;&nbsp;▸&nbsp;&nbsp;LUKE FIELD UNIT ONLINE&nbsp;&nbsp;▸&nbsp;&nbsp;MPC HORIZON CONVERGED&nbsp;&nbsp;▸&nbsp;&nbsp;KANPUR ⇄ FRANKFURT LINK ACTIVE&nbsp;&nbsp;▸&nbsp;&nbsp;COFFEE RESERVES CRITICAL&nbsp;&nbsp;▸&nbsp;&nbsp;SECOND BREAKFAST SCHEDULED&nbsp;&nbsp;▸&nbsp;&nbsp;NO WEEDS WERE SPARED&nbsp;&nbsp;▸&nbsp;&nbsp;NIGHT SHIFT AVAILABLE&nbsp;&nbsp;▸&nbsp;&nbsp;</span>
 </div></div>
 
 <!-- ═══ SANDWALKER LIVE SIM ═══ -->
@@ -986,16 +1162,25 @@
         <div id="mms-tele" class="mono"></div>
       </div>
       <div class="mms-controls">
+        <button type="button" id="mms-drive" class="mms-btn">TAKE THE WHEEL</button>
         <button type="button" id="mms-slip" class="mms-btn">TERRAIN SLIP: OFF</button>
         <button type="button" id="mms-view" class="mms-btn">VIEW: ORBIT</button>
-        <span class="mms-hint mono">drag to orbit · S for slip · V for camera</span>
+        <span class="mms-hint mono">drag to orbit · WASD to drive · S slip · V camera</span>
+      </div>
+      <div class="mms-dpad" id="mms-dpad" aria-hidden="true">
+        <button type="button" data-mk="f">▲</button>
+        <div class="row">
+          <button type="button" data-mk="l">◀</button>
+          <button type="button" data-mk="b">▼</button>
+          <button type="button" data-mk="r">▶</button>
+        </div>
       </div>
     </div>
 
     <div class="mms-legend mono">
-      <span><i style="background:#6f56e8"></i> reference path</span>
-      <span><i style="background:#c47f00"></i> tracked target</span>
-      <span><i style="background:#0e9b8d"></i> end-effector trail</span>
+      <span><i class="lg-violet"></i> reference path</span>
+      <span><i class="lg-amber"></i> tracked target</span>
+      <span><i class="lg-teal"></i> end-effector trail</span>
     </div>
 
     <div class="mms-caption">
@@ -1290,12 +1475,27 @@
   <div class="wrap">
     <p class="eyebrow reveal">// 06 — the darkroom</p>
     <h2 class="title reveal">Through the lens</h2>
-    <p class="lede reveal">Robots are the day job; light is the hobby. Everything below came off a phone camera on walks between labs, conferences, and home — mountain trails, northern streets, and an unreasonable number of campus flowers. Tap any frame to see it properly.</p>
+    <p class="lede reveal">Robots are the day job; light is the hobby. Everything below came off a phone camera on walks between labs, conferences, and home — mountain trails, northern streets, and an unreasonable number of campus flowers. Give the carousel a spin and click any frame to develop it.</p>
     <p class="dk-count mono reveal" id="dk-count"></p>
   </div>
   <div id="dk-banner" class="reveal" aria-hidden="true"></div>
-  <div class="wrap">
-    <div id="dk-grid"></div>
+
+  <div class="mms-wrap reveal" style="margin-top:40px">
+    <div class="mms-frame">
+      <div id="helix-stage">
+        <div class="mms-fallback">
+          WebGL is off in this browser, so the carousel stays in its case —<br>
+          the photographs still open from the prints above.
+        </div>
+      </div>
+      <div class="mms-overlay">
+        <div class="mms-hud-title mono">CAROUSEL · <span id="hx-count">54</span> FRAMES</div>
+      </div>
+      <div class="mms-controls">
+        <div class="hx-filters mono" id="hx-filters"></div>
+        <span class="mms-hint mono">drag to spin · click a frame to develop</span>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1323,7 +1523,12 @@
           <a class="chan" href="https://www.ceresfieldcheck.com/" target="_blank" rel="noopener">FIELDCHECK</a>
           <a class="chan" href="CV.pdf" target="_blank" rel="noopener">CV.PDF</a>
           <br>
-          <span class="addr">physical layer: C1, Old SBRA, IIT Kanpur</span>
+          <span class="addr">physical layer: C1, Old SBRA, IIT Kanpur · this terminal answers: type "help"</span>
+        </div>
+        <div id="term-hist" aria-live="polite"></div>
+        <div class="term-iline" id="term-iline" hidden>
+          <span class="prompt">guest@adersh:~$</span>
+          <input id="term-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal command input">
         </div>
       </div>
     </div>
@@ -1378,7 +1583,12 @@
 
   let seed = 99;
   const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const COLS = ['14,155,141', '111,86,232', '227,80,61', '196,127,0'];
+  // day: quiet ink specks on paper · night: the full starfield
+  const PALETTES = {
+    day:   { cols: ['14,155,141', '111,86,232', '227,80,61', '196,127,0'], amax: 0.5, mul: 0.55 },
+    night: { cols: ['63,214,196', '157,140,255', '255,125,107', '255,194,51'], amax: 0.85, mul: 0.9 }
+  };
+  let curPal = PALETTES.day;
   const pts = [];
   for (let i = 0; i < 230; i++) {
     const th = rand() * Math.PI * 2, ph = Math.acos(2 * rand() - 1), r = 420 + rand() * 480;
@@ -1386,7 +1596,7 @@
       x: r * Math.sin(ph) * Math.cos(th),
       y: r * Math.cos(ph) * 0.62,
       z: r * Math.sin(ph) * Math.sin(th),
-      c: COLS[(rand() * 4) | 0],
+      ci: (rand() * 4) | 0,
       s: 1 + rand() * 1.6
     });
   }
@@ -1403,8 +1613,8 @@
       const x = p.x * cR + p.z * sR, z = -p.x * sR + p.z * cR;
       const y = p.y * cT - z * sT, z2 = p.y * sT + z * cT;
       const s = f / (f + z2 + 950);
-      const a = Math.max(0.04, Math.min(0.5, s * 0.55));
-      ctx.fillStyle = 'rgba(' + p.c + ',' + a.toFixed(3) + ')';
+      const a = Math.max(0.04, Math.min(curPal.amax, s * curPal.mul));
+      ctx.fillStyle = 'rgba(' + curPal.cols[p.ci] + ',' + a.toFixed(3) + ')';
       const sz = p.s * s * 1.9;
       ctx.fillRect(cx + x * s * 1.6, cy + y * s * 1.6, sz, sz);
     }
@@ -1492,11 +1702,16 @@
     if (termDone) return;
     termDone = true;
     const CMD = 'connect --with adersh --channel any';
-    if (RM) { termcmd.textContent = CMD; termout.classList.add('show'); return; }
+    const showAll = () => {
+      termout.classList.add('show');
+      const il = document.getElementById('term-iline');
+      if (il) il.hidden = false;
+    };
+    if (RM) { termcmd.textContent = CMD; showAll(); return; }
     let i = 0;
     (function type() {
       if (i <= CMD.length) { termcmd.textContent = CMD.slice(0, i++); setTimeout(type, 42); }
-      else setTimeout(() => termout.classList.add('show'), 250);
+      else setTimeout(showAll, 250);
     })();
   }
   const termIO = new IntersectionObserver(es => es.forEach(e => {
@@ -1518,6 +1733,108 @@
     if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
   }), { threshold: 0.12 });
   document.querySelectorAll('.reveal, .reveal3d').forEach(el => io.observe(el));
+
+  /* ── night shift control ── */
+  const rootEl = document.documentElement;
+  const shiftBtn = document.getElementById('shift-toggle');
+  const hudShift = document.getElementById('hud-shift');
+  function syncShiftUI() {
+    const n = rootEl.getAttribute('data-shift') === 'night';
+    if (shiftBtn) shiftBtn.textContent = n ? 'DAY SHIFT ▸' : 'NIGHT SHIFT ▸';
+    if (hudShift) hudShift.textContent = n ? 'NIGHT' : 'DAY';
+    curPal = PALETTES[n ? 'night' : 'day'];
+    if (RM) draw();                       // repaint the static starfield
+  }
+  function setShift(s) {
+    rootEl.setAttribute('data-shift', s);
+    try { localStorage.setItem('shift', s); } catch (err) {}
+    if (window.__syncThemeMeta) window.__syncThemeMeta(s);
+    syncShiftUI();
+    dispatchEvent(new CustomEvent('shiftchange', { detail: s }));
+  }
+  window.setShift = setShift;
+  if (shiftBtn) shiftBtn.addEventListener('click', () =>
+    setShift(rootEl.getAttribute('data-shift') === 'night' ? 'day' : 'night'));
+  syncShiftUI();
+
+  /* ── mission rail: a rover rides the page ── */
+  (function () {
+    const rail = document.getElementById('rail');
+    const secs = [...document.querySelectorAll('[data-wp]')];
+    if (!rail || !secs.length) return;
+    const dots = secs.map(s => {
+      const a = document.createElement('a');
+      a.className = 'dot';
+      a.href = '#' + (s.id || '');
+      a.innerHTML = '<span class="lbl">' + s.dataset.wp + '</span>';
+      a.addEventListener('click', ev => { ev.preventDefault(); s.scrollIntoView({ behavior: 'smooth' }); });
+      rail.appendChild(a);
+      return a;
+    });
+    const rover = document.createElement('div');
+    rover.id = 'rail-rover';
+    rover.innerHTML =
+      '<svg width="22" height="15" viewBox="0 0 22 15" aria-hidden="true">' +
+      '<rect x="4" y="3" width="14" height="6" rx="2" fill="currentColor"/>' +
+      '<rect x="9" y="0" width="2" height="4" fill="currentColor"/>' +
+      '<circle cx="7.5" cy="11.5" r="2.7" fill="currentColor"/>' +
+      '<circle cx="14.5" cy="11.5" r="2.7" fill="currentColor"/></svg>';
+    rail.appendChild(rover);
+    function up() {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      rover.style.top = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
+      let ai = 0;
+      secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * 0.5) ai = i; });
+      dots.forEach((d, i) => d.classList.toggle('on', i === ai));
+    }
+    addEventListener('scroll', up, { passive: true });
+    up();
+  })();
+
+  /* ── the terminal answers back ── */
+  (function () {
+    const input = document.getElementById('term-in');
+    const hist = document.getElementById('term-hist');
+    const body = document.querySelector('.term-body');
+    if (!input || !hist || !body) return;
+    body.addEventListener('click', () => {
+      const il = document.getElementById('term-iline');
+      if (il && !il.hidden && !getSelection().toString()) input.focus();
+    });
+    function out(t, cls) {
+      const d = document.createElement('div');
+      d.className = 'tl' + (cls ? ' ' + cls : '');
+      d.textContent = t;
+      hist.appendChild(d);
+      while (hist.children.length > 16) hist.removeChild(hist.firstChild);
+    }
+    function go(sel) { const el2 = document.querySelector(sel); if (el2) el2.scrollIntoView({ behavior: 'smooth' }); }
+    const CMDS = {
+      help: () => out('try: sandwalker · luke · photos · night · day · weeds · whoami · ring · hire adersh · clear', 'dim'),
+      sandwalker: () => { out('rolling out ↴', 'dim'); go('#lab'); },
+      luke: () => { out('field unit responding ↴', 'dim'); go('#field-unit'); },
+      photos: () => { out('developing ↴', 'dim'); go('#darkroom'); },
+      night: () => { setShift('night'); out('night shift engaged.', 'dim'); },
+      day: () => { setShift('day'); out('day shift engaged.', 'dim'); },
+      weeds: () => out('session harvest: ' + (window.__weedsRemoved || 0) + ' weeds · 0 mL herbicide', 'dim'),
+      whoami: () => out('guest — the channels above can fix that', 'dim'),
+      ring: () => out('keep it secret. keep it safe.', 'dim'),
+      'hire adersh': () => out('opening channel → adm20@iitk.ac.in', 'dim'),
+      'sudo hire adersh': () => out('with great sudo comes great responsibility → adm20@iitk.ac.in', 'dim'),
+      clear: () => { hist.innerHTML = ''; }
+    };
+    input.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key !== 'Enter') return;
+      const raw = input.value.trim();
+      input.value = '';
+      if (!raw) return;
+      out('guest@adersh:~$ ' + raw);
+      const fn = CMDS[raw.toLowerCase()];
+      if (fn) fn();
+      else out('sh: ' + raw + ': command not found (a robot may have eaten it)', 'dim');
+    });
+  })();
 })();
 </script>
 
@@ -1535,12 +1852,16 @@
 <script src="assets/vendor/OrbitControls.js"></script>
 <script src="assets/mms-sim.js"></script>
 
-<!-- ═══ darkroom gallery ═══ -->
+<!-- ═══ darkroom gallery + carousel ═══ -->
 <script src="assets/photos.js"></script>
 <script src="assets/gallery.js"></script>
+<script src="assets/helix.js"></script>
 
-<!-- ═══ mini LUKE hero artefact ═══ -->
+<!-- ═══ field unit LUKE ═══ -->
 <script src="assets/luke-mini.js"></script>
+
+<!-- ═══ seed trail ═══ -->
+<script src="assets/seeds.js"></script>
 
 </body>
 </html>

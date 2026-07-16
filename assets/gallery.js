@@ -6,45 +6,14 @@
 (function () {
   'use strict';
   const M = window.PHOTO_MANIFEST;
-  const grid = document.getElementById('dk-grid');
-  if (!M || !M.photos || !grid) return;
+  if (!M || !M.photos) return;
 
   const photos = M.photos;
+  const flat = photos.slice();     // lightbox order = manifest order
 
   // capacity line
   const cap = document.getElementById('dk-count');
   if (cap) cap.textContent = photos.length + ' FRAMES DEVELOPED · SHOT ON PHONE · NO FILTERS HARMED';
-
-  // ---- build one horizontal "film roll" per year ---------------------------
-  const years = [...new Set(photos.map(p => p.y))].sort();
-  const flat = [];
-  for (const y of years) {
-    const group = photos.filter(q => q.y === y);
-
-    const head = document.createElement('div');
-    head.className = 'dk-roll-head';
-    head.innerHTML =
-      '<span class="dk-roll-title mono">ROLL ' + y + ' · ' + group.length +
-      ' EXPOSURE' + (group.length === 1 ? '' : 'S') + '</span>' +
-      '<span class="dk-roll-hint mono">← drag →</span>';
-    grid.appendChild(head);
-
-    const roll = document.createElement('div');
-    roll.className = 'dk-roll';
-    grid.appendChild(roll);
-
-    for (const p of group) {
-      const idx = flat.length;
-      flat.push(p);
-      const img = document.createElement('img');
-      img.src = 'assets/photos/thumb/' + p.n;
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.alt = 'photograph ' + (idx + 1) + ' of ' + photos.length;
-      img.addEventListener('click', () => openLB(idx));
-      roll.appendChild(img);
-    }
-  }
 
   // ---- lightbox ------------------------------------------------------------
   const lb = document.getElementById('lightbox');
@@ -58,6 +27,7 @@
     lbCount.textContent = (cur + 1) + ' / ' + flat.length;
   }
   function openLB(i) { cur = i; render(); lb.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  window.__openLB = openLB;        // the 3D carousel opens frames through this
   function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; }
   function nav(d) { cur = (cur + d + flat.length) % flat.length; render(); }
 

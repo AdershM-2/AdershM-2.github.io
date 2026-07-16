@@ -881,7 +881,9 @@
 			function onTouchStart( event ) {
 
 				if ( scope.enabled === false ) return;
-				event.preventDefault(); // prevent scrolling
+				// patched: let one-finger vertical swipes scroll the page (CSS touch-action: pan-y);
+				// only multi-touch gestures (dolly/pan) are captured outright
+				if ( event.touches.length > 1 ) event.preventDefault();
 
 				switch ( event.touches.length ) {
 
@@ -945,7 +947,8 @@
 			function onTouchMove( event ) {
 
 				if ( scope.enabled === false ) return;
-				event.preventDefault(); // prevent scrolling
+				// patched: see onTouchStart — respect touch-action for single-finger gestures
+				if ( event.touches.length > 1 ) event.preventDefault();
 
 				switch ( state ) {
 

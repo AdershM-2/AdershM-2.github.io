@@ -68,7 +68,8 @@
   controls.addEventListener('start', () => { controls.autoRotate = false; });
 
   // ---- studio lighting -----------------------------------------------------
-  scene.add(new T.HemisphereLight(0xffffff, 0xcfc4ae, 0.55));
+  const hemi = new T.HemisphereLight(0xffffff, 0xcfc4ae, 0.55);
+  scene.add(hemi);
   const key = new T.DirectionalLight(0xfff1dc, 1.5);
   key.position.set(3.5, 5.5, 2.5);
   key.castShadow = true;
@@ -355,18 +356,17 @@
       new T.LineBasicMaterial({ color: 0xb9ad93, transparent: true, opacity: 0.8 })
     ));
   }
-  // the violet EE reference path, floating above
-  {
-    const pts = [];
-    for (let i = 0; i <= 300; i++) {
-      const t = (i / 300) * Math.PI * 2;
-      pts.push(new T.Vector3(pathX(t), refY(t), pathZ(t)));
-    }
-    scene.add(new T.Line(
-      new T.BufferGeometry().setFromPoints(pts),
-      new T.LineBasicMaterial({ color: 0x7c5cff, transparent: true, opacity: 0.8 })
-    ));
+  // the violet EE reference path, floating above (samples reused by drive mode)
+  const REF_N = 300;
+  const refSamples = [];
+  for (let i = 0; i <= REF_N; i++) {
+    const a = (i / REF_N) * Math.PI * 2;
+    refSamples.push(new T.Vector3(pathX(a), refY(a), pathZ(a)));
   }
+  scene.add(new T.Line(
+    new T.BufferGeometry().setFromPoints(refSamples),
+    new T.LineBasicMaterial({ color: 0x7c5cff, transparent: true, opacity: 0.8 })
+  ));
 
   const target = new T.Mesh(new T.SphereGeometry(0.028, 16, 12),
     new T.MeshBasicMaterial({ color: 0xe89b00 }));
@@ -504,11 +504,63 @@
     }
   }
   if (viewBtn) viewBtn.addEventListener('click', () => setMode(mode + 1));
+
+  // ---- DRIVE MODE: take the wheel -----------------------------------------
+  let manual = false, mv = 0, mHead = 0, mX = 0, mZ = 0;
+  const keys = { f: 0, b: 0, l: 0, r: 0 };
+  const driveBtn = document.getElementById('mms-drive');
+  const dpad = document.getElementById('mms-dpad');
+
+  function setManual(on) {
+    manual = on;
+    keys.f = keys.b = keys.l = keys.r = 0;
+    if (driveBtn) {
+      driveBtn.textContent = on ? 'RELEASE · R' : 'TAKE THE WHEEL';
+      driveBtn.classList.toggle('on', on);
+    }
+    if (dpad) dpad.classList.toggle('show', on);
+    if (on) {
+      mX = prevX; mZ = prevZ; mv = 0;
+      mHead = Math.atan2(pathDZ(t), pathDX(t));
+      setMode(1);                                  // chase camera
+    } else {
+      // hand back to the autopilot at the nearest point of its path
+      let bi = 0, bd = 1e9;
+      for (let i = 0; i < REF_N; i++) {
+        const d = (pathX(i / REF_N * 6.2832) - mX) ** 2 + (pathZ(i / REF_N * 6.2832) - mZ) ** 2;
+        if (d < bd) { bd = d; bi = i; }
+      }
+      t = bi / REF_N * 6.2832;
+      prevX = pathX(t); prevZ = pathZ(t);
+      setMode(0);
+    }
+  }
+  if (driveBtn) driveBtn.addEventListener('click', () => setManual(!manual));
+  if (dpad) {
+    dpad.querySelectorAll('[data-mk]').forEach(b => {
+      const k = b.getAttribute('data-mk');
+      const dn = e => { e.preventDefault(); keys[k] = 1; };
+      const up = () => { keys[k] = 0; };
+      b.addEventListener('pointerdown', dn);
+      b.addEventListener('pointerup', up);
+      b.addEventListener('pointerleave', up);
+      b.addEventListener('pointercancel', up);
+    });
+  }
+
+  const DRIVEKEYS = { w: 'f', arrowup: 'f', s: 'b', arrowdown: 'b', a: 'l', arrowleft: 'l', d: 'r', arrowright: 'r' };
   addEventListener('keydown', e => {
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
     if (!inView) return;
     const k = e.key.toLowerCase();
-    if (k === 's') setSlip(!slip);
+    if (manual && DRIVEKEYS[k] !== undefined) { e.preventDefault(); keys[DRIVEKEYS[k]] = 1; return; }
+    if (k === 'r' && manual) { setManual(false); return; }
+    if (k === 's' && !manual) setSlip(!slip);
     if (k === 'v') setMode(mode + 1);
+  });
+  addEventListener('keyup', e => {
+    const k = e.key.toLowerCase();
+    if (DRIVEKEYS[k] !== undefined) keys[DRIVEKEYS[k]] = 0;
   });
 
   // ---- main loop -----------------------------------------------------------
@@ -526,17 +578,33 @@
     simTime += dt;
     slipAmt += ((slip ? 1 : 0) - slipAmt) * Math.min(1, dt * 2);
 
-    // advance along the lemniscate at ~constant ground speed
-    const dx = pathDX(t), dz = pathDZ(t);
-    const pv = Math.hypot(dx, dz);
-    t += (V0 * dt) / Math.max(pv, 0.2);
-
-    // nominal pose + slip drift (lateral wander off the ideal line)
-    const heading = Math.atan2(pathDZ(t), pathDX(t));
-    const nx = -Math.sin(heading), nz = Math.cos(heading);   // path normal
-    const wander = slipAmt * (0.09 * Math.sin(t * 4.7) + 0.05 * Math.sin(t * 9.3));
-    const px = pathX(t) + nx * wander;
-    const pz = pathZ(t) + nz * wander;
+    // pose comes from either the autopilot (lemniscate) or the visitor's hands
+    let px, pz, heading, kappa, pv = 1;
+    if (manual) {
+      const thr = keys.f - keys.b;
+      mv += thr * 1.1 * dt;
+      mv -= mv * 1.5 * dt;                        // rolling drag
+      mv = Math.max(-0.45, Math.min(0.95, mv));
+      const steerIn = keys.l - keys.r;
+      kappa = steerIn * 1.2;                      // curvature command
+      mHead += kappa * mv * dt;
+      mX += Math.cos(mHead) * mv * dt;
+      mZ += Math.sin(mHead) * mv * dt;
+      const rr = Math.hypot(mX, mZ);              // stay inside the arena
+      if (rr > 1.95) { mX *= 1.95 / rr; mZ *= 1.95 / rr; mv *= 0.5; }
+      px = mX; pz = mZ; heading = mHead;
+    } else {
+      // advance along the lemniscate at ~constant ground speed
+      const dx = pathDX(t), dz = pathDZ(t);
+      pv = Math.hypot(dx, dz);
+      t += (V0 * dt) / Math.max(pv, 0.2);
+      heading = Math.atan2(pathDZ(t), pathDX(t));
+      kappa = (pathDX(t) * pathDDZ(t) - pathDZ(t) * pathDDX(t)) / Math.pow(pv, 3);
+      const nx = -Math.sin(heading), nz = Math.cos(heading); // path normal
+      const wander = slipAmt * (0.09 * Math.sin(t * 4.7) + 0.05 * Math.sin(t * 9.3));
+      px = pathX(t) + nx * wander;
+      pz = pathZ(t) + nz * wander;
+    }
 
     // terrain-following: height + pitch/roll from the local slope
     const gy = groundH(px, pz);
@@ -555,13 +623,13 @@
     const speed = Math.hypot(hx, hz) / Math.max(dt, 1e-4);
     prevX = px; prevZ = pz;
 
-    // wheels spin; under slip they over-spin visibly
-    wheelSpin += (speed / R_WHEEL) * (1 + slipAmt * 0.9) * dt;
+    // wheels spin; under slip they over-spin visibly; reverse spins backward
+    const spinV = manual ? mv : speed;
+    wheelSpin += (spinV / R_WHEEL) * (1 + slipAmt * 0.9) * dt;
     for (const w of wheels) w.mesh.rotation.z = -wheelSpin;
 
-    // corner steering from path curvature (both directions on a figure-eight)
-    const curv = (pathDX(t) * pathDDZ(t) - pathDZ(t) * pathDDX(t)) / Math.pow(pv, 3);
-    const steer = T.MathUtils.clamp(Math.atan(curv * WX.front * 2.2), -0.6, 0.6)
+    // corner steering from commanded curvature (path in auto, hands in manual)
+    const steer = T.MathUtils.clamp(Math.atan(kappa * WX.front * 2.2), -0.6, 0.6)
                 + slipAmt * 0.12 * Math.sin(simTime * 6.3);
     // order: [L-front, L-rear, R-front, R-rear]
     steers[0].rotation.y = -steer; steers[2].rotation.y = -steer;
@@ -597,9 +665,21 @@
     }
     updateDust(dt, slipAmt);
 
-    // EE reference: a point on the violet path, a bit ahead of the rover
-    const tt = t + (V0 * LEAD_T) / Math.max(pv, 0.2);
-    worldTarget.set(pathX(tt), refY(tt), pathZ(tt));
+    // EE reference: in auto, a point just ahead on the violet path;
+    // in manual, the closest point of the path — drive away and watch the
+    // arm stretch to keep the end-effector on the reference.
+    if (manual) {
+      let bi = 0, bd = 1e9;
+      for (let i = 0; i < refSamples.length; i += 2) {
+        const dxr = refSamples[i].x - px, dzr = refSamples[i].z - pz;
+        const d = dxr * dxr + dzr * dzr;
+        if (d < bd) { bd = d; bi = i; }
+      }
+      worldTarget.copy(refSamples[bi]);
+    } else {
+      const tt = t + (V0 * LEAD_T) / Math.max(pv, 0.2);
+      worldTarget.set(pathX(tt), refY(tt), pathZ(tt));
+    }
     target.position.copy(worldTarget);
     targetGlow.scale.setScalar(1 + 0.22 * Math.sin(simTime * 6));
 
@@ -653,11 +733,29 @@
       tele.innerHTML =
         'BASE&nbsp;&nbsp;v=' + speed.toFixed(2) + ' m/s&nbsp;&nbsp;ψ=' + (heading * 57.3).toFixed(0).padStart(4) + '°<br>' +
         'ARM&nbsp;&nbsp;&nbsp;q1=' + (sol.q1 * 57.3).toFixed(0).padStart(4) + '°&nbsp;&nbsp;q2=' + (sol.elbowInterior * 57.3).toFixed(0).padStart(4) + '°<br>' +
-        'EE&nbsp;&nbsp;&nbsp;&nbsp;err=' + err.toFixed(1).padStart(5) + ' mm&nbsp;&nbsp;' + (slip ? '<b class="warn">SLIP</b>' : '<b class="ok">LOCK</b>');
+        'EE&nbsp;&nbsp;&nbsp;&nbsp;err=' + err.toFixed(1).padStart(5) + ' mm&nbsp;&nbsp;' + (slip ? '<b class="warn">SLIP</b>' : '<b class="ok">LOCK</b>') +
+        '<br>MODE&nbsp;&nbsp;' + (manual ? '<b class="warn">MANUAL — you</b>' : '<b class="ok">AUTO</b>');
     }
 
     renderer.render(scene, camera);
   }
+
+  // ---- night shift: floodlit arena after dark -------------------------------
+  function applyShift(s) {
+    const n = s === 'night';
+    const bg = new T.Color(n ? 0x0d1220 : 0xffffff);
+    scene.background = bg;
+    scene.fog.color.copy(bg);
+    floor.material.color.set(n ? 0x131b2c : 0xffffff);
+    sand.material.color.set(n ? 0x7a6742 : 0xd9c193);
+    hemi.intensity = n ? 0.22 : 0.55;
+    key.intensity = n ? 0.85 : 1.5;
+    key.color.set(n ? 0xbcd2ff : 0xfff1dc);
+    fill.intensity = n ? 0.5 : 0.35;
+    fill.color.set(n ? 0x3fd6c4 : 0xdfe9ff);
+  }
+  addEventListener('shiftchange', e => applyShift(e.detail));
+  applyShift(document.documentElement.getAttribute('data-shift') || 'day');
 
   // ---- sizing + visibility gating ------------------------------------------
   function resize() {
