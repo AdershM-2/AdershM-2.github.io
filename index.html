@@ -860,7 +860,10 @@
   /* interactive terminal */
   #term-hist .tl { white-space: pre-wrap; }
   #term-hist .tl.dim { color: rgba(234, 241, 245, 0.6); }
-  .term-iline { display: flex; gap: 10px; align-items: baseline; }
+  .term-iline { display: flex; gap: 8px; align-items: baseline; }
+  /* the block cursor blinks before the ghost text; hide it once someone types */
+  .term-iline:focus-within .tcursor,
+  .term-iline.has-text .tcursor { display: none; }
   #term-in {
     flex: 1;
     min-width: 60px;
@@ -1534,6 +1537,7 @@
         <div id="term-hist" aria-live="polite"></div>
         <div class="term-iline" id="term-iline" hidden>
           <span class="prompt">guest@adersh:~$</span>
+          <span class="tcursor" aria-hidden="true"></span>
           <input id="term-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal command input" placeholder="type here · try: help">
         </div>
       </div>
@@ -1850,6 +1854,10 @@
       hi = (hi + 1) % HINTS.length;
       input.placeholder = HINTS[hi];
     }, 2800);
+    const iline = document.getElementById('term-iline');
+    input.addEventListener('input', () => {
+      if (iline) iline.classList.toggle('has-text', !!input.value);
+    });
   })();
 })();
 </script>
