@@ -873,6 +873,12 @@
     caret-color: #ffc233;
     padding: 0;
   }
+  #term-in::placeholder {
+    color: rgba(234, 241, 245, 0.38);
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+  #term-in:focus::placeholder { color: rgba(234, 241, 245, 0.22); }
 
   /* mission rail: a rover rides the page */
   #rail {
@@ -1528,7 +1534,7 @@
         <div id="term-hist" aria-live="polite"></div>
         <div class="term-iline" id="term-iline" hidden>
           <span class="prompt">guest@adersh:~$</span>
-          <input id="term-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal command input">
+          <input id="term-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal command input" placeholder="type here · try: help">
         </div>
       </div>
     </div>
@@ -1834,6 +1840,16 @@
       if (fn) fn();
       else out('sh: ' + raw + ': command not found (a robot may have eaten it)', 'dim');
     });
+
+    // cycle the placeholder so visitors know the terminal listens
+    const HINTS = ['type here · try: help', 'try: luke', 'try: sandwalker', 'try: night',
+                   'try: photos', 'try: weeds', 'try: hire adersh', 'try: ring'];
+    let hi = 0;
+    setInterval(() => {
+      if (document.activeElement === input || input.value) return;
+      hi = (hi + 1) % HINTS.length;
+      input.placeholder = HINTS[hi];
+    }, 2800);
   })();
 })();
 </script>
